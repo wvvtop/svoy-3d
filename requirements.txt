@@ -3,4 +3,4 @@ uvicorn
 python-dotenv
 pydantic
 sqlalchemy
-
+pydantic_settings
