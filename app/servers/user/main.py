@@ -6,11 +6,31 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import config
+from app.database.database import create_database
 from app.servers.user.routers import router
 from app.utils.logger import setup_logger
 
 logger = setup_logger("user_app")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    logger.info("Инициализация базы данных...")
+
+    engine, session_factory = create_database()
+
+    app.state.engine = engine
+    app.state.session_factory = session_factory
+
+    logger.info("База данных инициализирована")
+
+    yield
+
+    logger.info("Остановка приложения. Закрываем соединения с БД...")
+
+    await engine.dispose()
+
+    logger.info("Соединения с БД закрыты")
 
 def create_app() -> FastAPI:
     """Фабрика сборки приложения"""
@@ -18,7 +38,7 @@ def create_app() -> FastAPI:
         title="Свой 3д",
         description="API для работы с приложением свой 3д",
         version="1.0.0",
-        # lifespan=lifespan
+        lifespan=lifespan
     )
 
     app.include_router(router)
