@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 
 router = APIRouter(
-    tags=["Роутер для авторизации"],
+    tags=["Роутер для регистрации и авторизации"],
     prefix="/auth"
 )
+
