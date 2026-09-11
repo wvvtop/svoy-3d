@@ -15,6 +15,11 @@ class Config(BaseSettings):
     DB_PASS: str = "" 
     DB_NAME: str = "" 
 
+    # JWT
+    JWT_SECRET_KEY: str = "dwadwadwadwad"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
     # Свойство для формирования URL базы данных
     @property
     def DATABASE_URL(self) -> str:

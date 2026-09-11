@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-
+from uvicorn.config import LOGGING_CONFIG
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -7,8 +7,11 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import config
 from app.database.database import create_database
+from app.exceptions.auth_exception_handler import auth_exception_handler
 from app.servers.user.routers import router
 from app.utils.logger import setup_logger
+from app.database.base import Base
+from app.exceptions.auth import AuthError
 
 logger = setup_logger("user_app")
 
@@ -21,6 +24,10 @@ async def lifespan(app: FastAPI):
 
     app.state.engine = engine
     app.state.session_factory = session_factory
+
+    # Создание таблиц
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     logger.info("База данных инициализирована")
 
@@ -42,7 +49,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
-
+    app.add_exception_handler(AuthError, auth_exception_handler)
     return app
 
 
@@ -54,7 +61,7 @@ def main():
     logger.info(f"Запуск HTTP-сервера на {config.APP_HOST}:{config.APP_PORT}")
 
     # Переопределяем стандартный формат логирования Uvicorn
-    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config = LOGGING_CONFIG.copy()
     log_config["formatters"]["default"][
         "fmt"] = "%(asctime)s - uvicorn.error - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["datefmt"] = "%Y-%m-%d %H:%M:%S"
