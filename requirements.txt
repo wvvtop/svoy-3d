@@ -5,3 +5,7 @@ pydantic
 sqlalchemy
 pydantic_settings
 asyncpg
+pyjwt
+pwdlib[argon2]
+email-validator
+python-multipart
