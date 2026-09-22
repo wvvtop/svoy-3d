@@ -7,16 +7,38 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.core.config import config
 from app.database.database import create_database
-from app.exceptions.auth_exception_handler import auth_exception_handler
 from app.servers.user.routers import router
 from app.utils.logger import setup_logger
 from app.database.base import Base
 from app.exceptions.auth import AuthError
+from app.exceptions.app_exception import AppError
+from app.exceptions.app_exception_handler import app_exception_handler
+from app.integrations.storage.client import create_minio_client
+from app.services.storage import StorageService
 
 logger = setup_logger("user_app")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Инициализация MinIO")
+    minio_client = create_minio_client()
+
+    photo_storage = StorageService(
+        client=minio_client,
+        bucket=config.MINIO_BUCKET_PHOTOS,
+    )
+
+    model_storage = StorageService(
+        client=minio_client,
+        bucket=config.MINIO_BUCKET_MODELS,
+    )
+
+    photo_storage.ensure_bucket()
+    model_storage.ensure_bucket()
+
+    app.state.minio = minio_client
+    app.state.photo_storage = photo_storage
+    app.state.model_storage = model_storage
 
     logger.info("Инициализация базы данных...")
 
@@ -49,7 +71,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
-    app.add_exception_handler(AuthError, auth_exception_handler)
+    app.add_exception_handler(AppError, app_exception_handler)
     return app
 
 

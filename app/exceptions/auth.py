@@ -1,6 +1,7 @@
 from fastapi import status
+from app.exceptions.app_exception import AppError
 
-class AuthError(Exception):
+class AuthError(AppError):
     """Базовый класс ошибок аутентифиации"""
     status_code = status.HTTP_401_UNAUTHORIZED
     code = "authentication_error"
