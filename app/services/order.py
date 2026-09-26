@@ -2,15 +2,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 from app.database.models.order import Order
 from app.database.models.user import User
+from app.exceptions.order import OrderNotFoundError
 from app.repositories.order import create_order
 from app.repositories.order_photo import create_order_photo
 from app.schemas.enums.order import PhotoPosition
+from app.schemas.order import OrderInfo
 from app.services.image_upload import read_upload_file
 from app.services.image_validator import validate_image
 from app.services.storage import StorageService
 from fastapi import UploadFile
 from app.schemas.enums.order import PhotoStatus
-
+from app.repositories.order import get_order_by_id_and_user
 
 async def create_order_with_photos(
     session: AsyncSession,
@@ -123,3 +125,17 @@ async def create_order_with_photos(
                 pass
 
         raise
+
+
+async def get_user_order(
+    session: AsyncSession, 
+    user: User,
+    order_id: int
+) -> OrderInfo:
+    """Получение информации о заказе"""
+    order = await get_order_by_id_and_user(session=session,user_id=user.id, order_id=order_id)
+    if order is None:
+        raise OrderNotFoundError()
+
+    return OrderInfo.model_validate(order)
+
