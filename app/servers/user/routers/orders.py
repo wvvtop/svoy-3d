@@ -3,10 +3,12 @@ from urllib import request
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
+from app.schemas.order import OrderInfo
 from app.servers.user.dependencies import get_current_user
 from app.database.dependencies import get_session
 from app.schemas.enums.order import PhotoPosition
-from app.services.order import create_order_with_photos
+from app.services.order import create_order_with_photos, get_user_order
+from fastapi import status
 
 router = APIRouter(
     tags=["Роутер для заказов"],
@@ -61,6 +63,15 @@ async def create_order(
         ],
     }
 
+@router.get("/get/{order_id}", response_model=OrderInfo)
+async def get_order_info(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    order_id: int
+):
+    """Endpoint для получения информации о заказе"""
+    return await get_user_order(session=session, user=current_user, order_id=order_id)    
+    
 
 @router.get("/test")
 async def test():
@@ -68,6 +79,6 @@ async def test():
 
 @router.get("/test/auth")
 async def test_auth(
-    current_user: Annotated[User, Depends(get_current_user)]
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     return "auth ok"
