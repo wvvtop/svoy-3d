@@ -1,6 +1,6 @@
 from typing import Annotated
 from urllib import request
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
 from app.schemas.order import OrderInfo, DeletedOrder
@@ -16,7 +16,6 @@ from app.services.order import (
     purge_user_order, 
     restore_user_order
 )
-from fastapi import status
 
 router = APIRouter(
     tags=["Роутер для заказов"],
