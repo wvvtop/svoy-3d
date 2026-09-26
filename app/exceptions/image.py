@@ -13,7 +13,7 @@ class ImageError(AppError):
 class ImageTooLargeError(ImageError):
     """Размер изображения превышает допустимый."""
 
-    status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+    status_code = status.HTTP_413_CONTENT_TOO_LARGE
     code = "image_too_large"
     message = "Image size exceeds the allowed limit"
 

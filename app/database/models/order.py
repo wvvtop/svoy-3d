@@ -23,6 +23,18 @@ class Order(Base):
         default=datetime.now,
     )
 
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        index=True,
+    )
+
+    purged_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        index=True,
+    )
+
     photos: Mapped[list["OrderPhoto"]] = relationship(
         "OrderPhoto",
         back_populates="order",
