@@ -57,3 +57,27 @@ class OrderCreationError(OrderError):
     status_code = status.HTTP_400_BAD_REQUEST
     code = "order_creation_failed"
     message = "Failed to create order"
+
+
+class OrderAlreadyDeletedError(OrderError):
+    """Заказ уже находится в корзине."""
+
+    status_code = status.HTTP_409_CONFLICT
+    code = "order_already_deleted"
+    message = "Order is already deleted"
+
+
+class OrderNotDeletedError(OrderError):
+    """Заказ нельзя восстановить, потому что он не удалён."""
+
+    status_code = status.HTTP_409_CONFLICT
+    code = "order_not_deleted"
+    message = "Order is not deleted"
+
+
+class OrderAlreadyPurgedError(OrderError):
+    """Данные заказа уже очищены."""
+
+    status_code = status.HTTP_409_CONFLICT
+    code = "order_already_purged"
+    message = "Order data has already been purged"
