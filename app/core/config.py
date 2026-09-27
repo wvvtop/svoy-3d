@@ -33,6 +33,7 @@ class StorageConfig(BaseSettings):
     MINIO_BUCKET_MODELS: str = "models"
 
     MINIO_SECURE: bool = False
+    MINUTES_PHOTO__URL_EXPIRES: int = 15
 
 class ImageConfig(BaseSettings):
     """Настройка изображений и сохранений"""
@@ -41,6 +42,9 @@ class ImageConfig(BaseSettings):
     ALLOWED_FORMATS_RAW: str = "JPEG:image/jpeg,PNG:image/png,WEBP:image/webp"
     MAX_IMAGE_SIZE_MB_RAW: int = 15
     MAX_IMAGE_PIXELS: int = 50_000_000
+
+    COMPRESSED_MAX_SIZE: tuple = (2500, 2500)
+    PREVIEW_MAX_SIZE: tuple = (500, 500)
 
     @property
     def MAX_IMAGE_SIZE_MB(self) -> int:

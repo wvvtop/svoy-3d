@@ -33,7 +33,22 @@ class OrderPhoto(Base):
         nullable=False,
     )
 
-    object_key: Mapped[str] = mapped_column(
+     # Оригинал
+    original_object_key: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+        unique=True,
+    )
+
+    # Сжатая версия
+    compressed_object_key: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False,
+        unique=True,
+    )
+
+    # Preview / thumbnail
+    preview_object_key: Mapped[str] = mapped_column(
         String(500),
         nullable=False,
         unique=True,

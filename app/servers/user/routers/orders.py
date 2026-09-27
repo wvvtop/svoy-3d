@@ -12,7 +12,8 @@ from app.services.order import (
     delete_user_order,
     get_deleted_order,
     get_deleted_orders, 
-    get_user_order, 
+    get_user_order,
+    get_user_orders, 
     purge_user_order, 
     restore_user_order
 )
@@ -57,17 +58,6 @@ async def create_order(
     return {
         "id": order.id,
         "status": order.status,
-        "photos": [
-            {
-                "position": photo.position,
-                "object_key": photo.object_key,
-                "original_filename": photo.original_filename,
-                "content_type": photo.content_type,
-                "size": photo.size,
-                "status": photo.status,
-            }
-            for photo in order.photos
-        ],
     }
 
 @router.get("/deleted", response_model=list[DeletedOrder])
@@ -102,7 +92,16 @@ async def get_order_info(
 ):
     """Endpoint для получения информации о заказе"""
     return await get_user_order(session=session, user=current_user, order_id=order_id)
-    
+
+@router.get("/", response_model=list[OrderInfo])
+async def get_orders_info(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Endpoint для получения информации о всех заказах""" 
+    return await get_user_orders(session=session, user=current_user)
+
+
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
     order_id: int,

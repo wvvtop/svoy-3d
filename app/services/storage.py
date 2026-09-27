@@ -1,6 +1,7 @@
+from datetime import timedelta
 from io import BytesIO
 from minio import Minio
-
+from app.core.config import config
 
 class StorageService:
     """Сервис для работы с единым объектным хранилищем."""
@@ -44,3 +45,4 @@ class StorageService:
             bucket_name=self.bucket,
             object_name=object_key
         )
+    

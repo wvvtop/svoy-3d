@@ -37,6 +37,21 @@ async def get_order_by_id_and_user(
 
     return order.scalar_one_or_none()
 
+async def get_orders_by_user(
+    session: AsyncSession,
+    user_id: int
+) -> list[Order]:
+    """Метод для получения активного заказа пользователя (Order)"""
+    orders = await session.execute(
+        select(Order)
+            .where(
+                Order.user_id==user_id,
+                Order.deleted_at.is_(None)
+            )
+    )
+
+    return list(orders.scalars().all())
+
 async def get_deleted_order_by_id_and_user(
     session: AsyncSession,
     user_id: int,
