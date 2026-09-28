@@ -45,4 +45,22 @@ class StorageService:
             bucket_name=self.bucket,
             object_name=object_key
         )
+
+    def delete_prefix(self, prefix: str) -> None:
+        objects = self.client.list_objects(
+            self.bucket,
+            prefix=prefix,
+            recursive=True,
+        )
+    
+        for obj in objects:
+            object_name = obj.object_name
+    
+            if object_name is None:
+                continue
+            
+            self.client.remove_object(
+                self.bucket,
+                object_name,
+            )
     
