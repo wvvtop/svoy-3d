@@ -2,8 +2,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class AppConfig(BaseSettings):
     """Класс конфига основного приложения"""
-    APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
     LOG_LEVEL: str = 'INFO'
 
 class DatabaseConfig(BaseSettings):
