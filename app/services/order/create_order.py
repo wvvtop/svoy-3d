@@ -3,19 +3,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order import Order
 from app.database.models.user import User
 from app.schemas.enums.order import PhotoPosition
+from app.services.order_image.upload import cleanup_uploaded_objects, upload_order_image
 from app.services.storage import StorageService
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
 from app.database.models.order import Order
 from app.database.models.user import User
 from app.repositories.order.create_order import create_order
 from app.repositories.order.order_photo import create_order_photo
 from app.schemas.enums.order import PhotoPosition, PhotoStatus
-from app.services.image.image_upload import read_upload_file
-from app.services.image.image_validator import validate_image
-from app.services.storage import StorageService
-from app.services.image.image_processor import process_image
 
 
 async def create_order_with_photos(
@@ -50,99 +46,53 @@ async def create_order_with_photos(
 
         for position, upload_file in photos.items():
 
-            # Читаем файл с ограничением размера.
-            data = await read_upload_file(upload_file)
-
-            # Проверяем реальное содержимое изображения.
-            validated = validate_image(
-                data=data,
-                client_content_type=upload_file.content_type,
+            uploaded = await upload_order_image(
+                storage=storage,
+                order_id=order.id,
+                position=position.value,
+                upload_file=upload_file,
             )
 
-            processed = process_image(validated.data)
-
-            # -------------------------------------------------
-            # 3. Создаём object key
-            # -------------------------------------------------
-
-            file_id = uuid4().hex
-
-            base_path = (
-                f"orders/"
-                f"{order.id}/"
-                f"{position.value}/"
+            # Запоминаем все загруженные объекты.
+            #
+            # Если дальше PostgreSQL упадёт,
+            # add/create service сможет удалить их.
+            uploaded_object_keys.extend(
+                uploaded.uploaded_object_keys
             )
-
-            original_object_key = (
-                f"{base_path}"
-                f"original/"
-                f"{file_id}."
-                f"{validated.extension}"
-            )
-
-            compressed_object_key = (
-                f"{base_path}"
-                f"compressed/"
-                f"{file_id}.jpg"
-            )
-
-            preview_object_key = (
-                f"{base_path}"
-                f"preview/"
-                f"{file_id}.jpg"
-            )
-
-            # -------------------------------------------------
-            # 4. Загружаем файл в MinIO
-            # -------------------------------------------------
-
-            storage.upload(
-                object_key=original_object_key,
-                data=validated.data,
-                content_type=validated.content_type,
-            )
-
-            uploaded_object_keys.append(original_object_key)
-
-
-            storage.upload(
-                object_key=compressed_object_key,
-                data=processed.compressed,
-                content_type="image/jpeg",
-            )
-
-            uploaded_object_keys.append(compressed_object_key)
-
-
-            storage.upload(
-                object_key=preview_object_key,
-                data=processed.preview,
-                content_type="image/jpeg",
-            )
-
-            uploaded_object_keys.append(preview_object_key)
-
-            # -------------------------------------------------
-            # 5. Создаём запись в БД
-            # -------------------------------------------------
+            
+            # =================================================
+            # 3. Создаём запись фотографии
+            # =================================================
 
             await create_order_photo(
                 session=session,
+
                 order_id=order.id,
                 position=position.value,
 
-                original_object_key=original_object_key,
-                compressed_object_key=compressed_object_key,
-                preview_object_key=preview_object_key,
+                original_object_key=(
+                    uploaded.original_object_key
+                ),
+                compressed_object_key=(
+                    uploaded.compressed_object_key
+                ),
+                preview_object_key=(
+                    uploaded.preview_object_key
+                ),
 
-                original_filename=upload_file.filename or "image",
-                content_type=validated.content_type,
-                size=validated.size,
+                original_filename=(
+                    uploaded.original_filename
+                ),
+                content_type=uploaded.content_type,
+                size=uploaded.size,
+
                 status=PhotoStatus.UPLOADED,
             )
 
+
         # -----------------------------------------------------
-        # 6. Только здесь завершаем transaction
+        # 4. Только здесь завершаем transaction
         # -----------------------------------------------------
 
         await session.commit()
@@ -163,12 +113,6 @@ async def create_order_with_photos(
         # Удаляем уже загруженные файлы из MinIO
         # -----------------------------------------------------
 
-        for object_key in uploaded_object_keys:
-            try:
-                storage.delete(object_key)
-            except Exception:
-                # Ошибка удаления не должна скрыть
-                # первоначальную ошибку операции.
-                pass
+        await cleanup_uploaded_objects(storage=storage, object_keys=uploaded_object_keys)
 
         raise

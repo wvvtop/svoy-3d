@@ -13,7 +13,7 @@ from app.database.base import Base
 from app.exceptions.auth import AuthError
 from app.exceptions.app_exception import AppError
 from app.exceptions.app_exception_handler import app_exception_handler
-from app.integrations.storage.client import create_minio_client
+from app.integrations.storage.client import create_minio_client, create_minio_public_client
 from app.services.storage import StorageService
 
 logger = setup_logger("user_app")
@@ -22,15 +22,19 @@ logger = setup_logger("user_app")
 async def lifespan(app: FastAPI):
     logger.info("Инициализация MinIO")
     minio_client = create_minio_client()
+    minio_public_client = create_minio_public_client()
+
 
     photo_storage = StorageService(
         client=minio_client,
         bucket=config.MINIO_BUCKET_PHOTOS,
+        public_client=minio_public_client
     )
 
     model_storage = StorageService(
         client=minio_client,
         bucket=config.MINIO_BUCKET_MODELS,
+        public_client=minio_public_client
     )
 
     photo_storage.ensure_bucket()

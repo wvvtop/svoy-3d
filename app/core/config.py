@@ -33,7 +33,10 @@ class StorageConfig(BaseSettings):
     MINIO_BUCKET_MODELS: str = "models"
 
     MINIO_SECURE: bool = False
-    MINUTES_PHOTO__URL_EXPIRES: int = 15
+    MINUTES_PHOTO_URL_EXPIRES: int = 15
+
+    MINIO_PUBLIC_HOST: str = "localhost"
+    MINIO_PUBLIC_PORT: int = 9000
 
 class ImageConfig(BaseSettings):
     """Настройка изображений и сохранений"""

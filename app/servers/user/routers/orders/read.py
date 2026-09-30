@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
 from app.schemas.order import OrderInfo, DeletedOrder
@@ -13,6 +13,7 @@ from app.services.order.get_order import (
 )
 
 router = APIRouter()
+    
 
 @router.get("/deleted/{order_id}", response_model=DeletedOrder)
 async def get_deleted(
