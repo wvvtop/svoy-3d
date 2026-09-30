@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
-from app.servers.user.dependencies import get_current_user
+from app.servers.user.dependencies import CurrentUser
 from app.database.dependencies import get_session
-from app.services.order.delete_order import restore_user_order
+from app.servers.user.services.order.delete_order import restore_user_order
 
 
 router = APIRouter()
@@ -16,7 +16,7 @@ router = APIRouter()
 )
 async def restore_order(
     order_id: int,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Восстанавливает заказ из корзины."""

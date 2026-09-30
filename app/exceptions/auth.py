@@ -121,6 +121,12 @@ class NotOwnerError(AuthorizationError):
     code = "not_owner"
     message = "You are not the owner of this resource"
 
+class ForbiddenError(AppError):
+    """Запрещен доступ"""
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "forbidden"
+    message = "Access denied"
+
 
 
 

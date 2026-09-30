@@ -3,14 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order import Order
 from app.database.models.user import User
 from app.schemas.enums.order import PhotoPosition
-from app.services.order_image.upload import cleanup_uploaded_objects, upload_order_image
+from app.servers.user.services.order_image.upload import cleanup_uploaded_objects, upload_order_image
 from app.services.storage import StorageService
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order import Order
 from app.database.models.user import User
-from app.repositories.order.create_order import create_order
-from app.repositories.order.order_photo import create_order_photo
+from app.servers.user.repositories.order.create_order import create_order
+from app.servers.user.repositories.order.order_photo import create_order_photo
 from app.schemas.enums.order import PhotoPosition, PhotoStatus
 
 

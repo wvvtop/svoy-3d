@@ -4,7 +4,7 @@ import asyncio
 from app.database.models.user import User
 from app.exceptions.order import OrderNotFoundError
 from app.exceptions.order_image import OrderImageNotFoundError
-from app.repositories.order.get_order import get_order_by_id_and_user
+from app.servers.user.repositories.order.get_order import get_order_by_id_and_user
 from app.repositories.order_image.get import (
     get_order_photos_by_order_id, 
     get_order_photo_by_order_id_and_position

@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
-from app.repositories.order.get_order import get_order_by_id_and_user
+from app.servers.user.repositories.order.get_order import get_order_by_id_and_user
 from app.services.image.image_processor import process_image
 from app.services.image.image_upload import read_upload_file
 from app.services.image.image_validator import validate_image

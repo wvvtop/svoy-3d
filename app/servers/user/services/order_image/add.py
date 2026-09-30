@@ -10,7 +10,7 @@ from app.exceptions.order_image import (
     OrderImageAlreadyExistsError,
     OrderImageInvalidPosition,
 )
-from app.repositories.order.get_order import (
+from app.servers.user.repositories.order.get_order import (
     get_order_by_id_and_user,
 )
 from app.repositories.order_image.create import (
@@ -21,7 +21,7 @@ from app.repositories.order_image.get import (
 )
 from app.schemas.enums.order import PhotoPosition
 from app.schemas.enums.order import PhotoStatus
-from app.services.order_image.upload import (
+from app.servers.user.services.order_image.upload import (
     cleanup_uploaded_objects,
     upload_order_image,
 )

@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
 from app.schemas.order import OrderInfo, DeletedOrder
-from app.servers.user.dependencies import get_current_user
+from app.servers.user.dependencies import CurrentUser
 from app.database.dependencies import get_session
-from app.services.order.get_order import (
+from app.servers.user.services.order.get_order import (
     get_deleted_order,
     get_deleted_orders, 
     get_user_order,
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.get("/deleted/{order_id}", response_model=DeletedOrder)
 async def get_deleted(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
     order_id: int
 ):
@@ -30,7 +30,7 @@ async def get_deleted(
 
 @router.get("/deleted", response_model=list[DeletedOrder])
 async def get_deleted_user_orders(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Endpoint для получения информации всех удаленных заказов"""
@@ -41,7 +41,7 @@ async def get_deleted_user_orders(
 
 @router.get("/{order_id}", response_model=OrderInfo)
 async def get_order_info(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
     order_id: int
 ):
@@ -50,7 +50,7 @@ async def get_order_info(
 
 @router.get("/", response_model=list[OrderInfo])
 async def get_orders_info(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Endpoint для получения информации о всех заказах""" 
@@ -63,6 +63,6 @@ async def test():
 
 @router.get("/test/auth")
 async def test_auth(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
 ):
     return "auth ok"

@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
 from app.exceptions.order import OrderNotFoundError
-from app.repositories.order.get_order import get_order_by_id_and_user
+from app.servers.user.repositories.order.get_order import get_order_by_id_and_user
 from app.repositories.order_image.get import get_order_photo_by_order_id_and_position
 from app.schemas.enums.order import PhotoPosition
 from app.exceptions.order_image import OrderImageInvalidPosition, OrderImageNotFoundError

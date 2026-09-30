@@ -2,7 +2,7 @@ from datetime import datetime
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
-from app.repositories.order.get_order import get_order_for_update
+from app.servers.user.repositories.order.get_order import get_order_for_update
 from app.services.storage import StorageService
 from app.exceptions.order import (
     OrderAlreadyDeletedError,
