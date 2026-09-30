@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from app.core.config import config
+from app.servers.user.config import config
 from app.database.database import create_database
 from app.servers.user.routers import router
 from app.utils.logger import setup_logger
