@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
-from app.servers.user.dependencies import get_current_user
+from app.servers.user.dependencies import CurrentUser
 from app.database.dependencies import get_session
-from app.services.order.delete_order import (
+from app.servers.user.services.order.delete_order import (
     delete_user_order,
     purge_user_order, 
 )
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
     order_id: int,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Помещает заказ пользователя в корзину."""
@@ -35,7 +35,7 @@ async def delete_order(
 async def purge_order(
     request: Request,
     order_id: int,
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Очищает пользовательские данные заказа."""

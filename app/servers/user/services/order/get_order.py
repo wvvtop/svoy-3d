@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
-from app.repositories.order.get_order import (
+from app.servers.user.repositories.order.get_order import (
     get_deleted_order_by_id_and_user, 
     get_deleted_orders_by_user, 
     get_order_by_id_and_user,

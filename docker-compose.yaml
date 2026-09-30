@@ -7,6 +7,17 @@ services:
       - .env
     ports:
       - "${APP_PORT}:${APP_PORT}"
+  admin-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+
+    env_file:
+      - .env
+      - .env.admin
+
+    ports:
+      - "8001:8001"
   postgres:
     image: postgres:18
 
