@@ -1,7 +1,7 @@
 from datetime import timedelta
 from io import BytesIO
 from minio import Minio
-from app.core.config import config
+
 
 class StorageService:
     """Сервис для работы с единым объектным хранилищем."""
@@ -9,8 +9,10 @@ class StorageService:
     def __init__(
         self,
         client: Minio,
+        public_client: Minio,
         bucket: str
     ):
+        self.public_client = public_client
         self.client = client
         self.bucket = bucket
 
@@ -47,6 +49,7 @@ class StorageService:
         )
 
     def delete_prefix(self, prefix: str) -> None:
+        """Метод для удаления всех фотографий по префиксу"""
         objects = self.client.list_objects(
             self.bucket,
             prefix=prefix,
@@ -63,4 +66,16 @@ class StorageService:
                 self.bucket,
                 object_name,
             )
+
+
+    def get_presigned_url(
+        self,
+        object_key: str,
+        expires: timedelta = timedelta(minutes=15),
+    ) -> str:
+        return self.public_client.presigned_get_object(
+            self.bucket,
+            object_key,
+            expires=expires,
+        )
     
