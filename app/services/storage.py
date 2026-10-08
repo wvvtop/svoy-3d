@@ -78,4 +78,15 @@ class StorageService:
             object_key,
             expires=expires,
         )
-    
+
+    def get_object(self, object_key: str) -> bytes:
+        """Скачивает объект из MinIO и возвращает bytes."""
+        response = self.client.get_object(
+            bucket_name=self.bucket,
+            object_name=object_key,
+        )
+        try:
+            return response.read()
+        finally:
+            response.close()
+            response.release_conn()

@@ -55,6 +55,19 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    env_file:
+      - .env
+      - .env.admin
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   minio_data:
