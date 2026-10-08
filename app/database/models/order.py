@@ -42,3 +42,15 @@ class Order(Base):
         lazy="selectin"
     )
 
+    generation_jobs: Mapped[list["GenerationJob"]] = relationship(
+        "GenerationJob",
+        back_populates="order",
+        cascade="all, delete-orphan",
+    )
+
+    models: Mapped[list["OrderModel"]] = relationship(
+        "OrderModel",
+        back_populates="order",
+        cascade="all, delete-orphan",
+    )
+

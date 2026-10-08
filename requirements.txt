@@ -3,6 +3,7 @@ uvicorn
 python-dotenv
 pydantic
 sqlalchemy
+greenlet
 pydantic_settings
 asyncpg
 pyjwt
@@ -11,3 +12,4 @@ email-validator
 python-multipart
 minio
 pillow
+httpx
