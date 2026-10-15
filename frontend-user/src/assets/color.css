@@ -1,0 +1,80 @@
+/* ============ 1. СЫРАЯ ПАЛИТРА (не используем в компонентах) ============ */
+:root {
+  --gray-0:   #ffffff;
+  --gray-50:  #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --gray-700: #334155;
+  --gray-800: #1e293b;
+  --gray-900: #0f172a;
+
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #001964;
+
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --amber-500: #f59e0b;
+  --red-500:   #ef4444;
+  --red-600:   #dc2626;
+}
+
+
+:root {
+  /* ---------- ФОНЫ И СЛОИ (background) ---------- */
+  --color-bg: var(--gray-50);              /* фон страницы (body, html) */
+  --color-surface: var(--gray-0);          /* фон карточек, navbar, модалок, инпутов */
+  --color-surface-hover: var(--gray-100);  /* hover-фон поверх surface */
+  --color-overlay: rgb(15 23 42 / 0.5);    /* затемнение под модалкой */
+
+  --color-header-bg: var(--gray-900);      /* фон navbar */
+  --color-header-text: var(--gray-0);      /* основной текст в navbar */
+  --color-header-text-muted: var(--gray-400); /* второстепенный текст */
+  --color-header-border: var(--gray-800);  /* разделитель снизу */
+
+  /* ---------- ТЕКСТ (color) ---------- */
+  --color-text: var(--gray-900);           /* основной текст */
+  --color-text-muted: var(--gray-500);     /* подписи, метаданные, хлебные крошки */
+  --color-text-subtle: var(--gray-400);    /* placeholder, disabled */
+  --color-text-inverse: var(--gray-0);     /* текст на тёмном фоне (не primary) */
+
+  /* ---------- ГРАНИЦЫ (border-color) ---------- */
+  --color-border: var(--gray-200);         /* обычные контуры, разделители */
+  --color-border-strong: var(--gray-300);  /* акцентные контуры, hover */
+
+  /* ---------- PRIMARY (акцент, действие) ---------- */
+  --color-primary: var(--blue-600);        /* фон главной кнопки, цвет ссылок, граница фокуса */
+  --color-primary-hover: var(--blue-700);  /* hover у primary */
+  --color-primary-active: var(--blue-800); /* :active у primary */
+  --color-primary-subtle: #eff6ff;         /* мягкий фон: бейджи, info-алерты, активный пункт */
+  --color-on-primary: var(--gray-0);       /* текст поверх primary-фона */
+
+  /* ---------- SECONDARY (второе действие) ---------- */
+  --color-secondary: var(--gray-600);        /* фон второстепенной кнопки */
+  --color-secondary-hover: var(--gray-700);  /* hover у secondary */
+  --color-on-secondary: var(--gray-0);       /* текст поверх secondary-фона */
+
+  /* ---------- СТАТУСЫ ---------- */
+  --color-success: var(--green-500);         /* текст/граница/фон success */
+  --color-success-subtle: #f0fdf4;           /* мягкий фон success */
+  --color-on-success: var(--gray-0);         /* текст поверх success-фона */
+  --color-success-hover: var(--green-600);
+
+  --color-warning: var(--amber-500);         /* текст/граница/фон warning */
+  --color-warning-subtle: #fffbeb;           /* мягкий фон warning */
+  --color-on-warning: var(--gray-900);       /* текст поверх warning (тёмный — жёлтый светлый) */
+  --color-warning-hover: var(--red-500);
+
+  --color-danger: var(--red-600);            /* текст/граница/фон danger */
+  --color-danger-subtle: #fef2f2;            /* мягкий фон danger */
+  --color-on-danger: var(--gray-0);          /* текст поверх danger-фона */
+
+  /* ---------- ФОКУС ---------- */
+  --color-focus-ring: var(--blue-500);       /* outline-color для :focus-visible */
+}
