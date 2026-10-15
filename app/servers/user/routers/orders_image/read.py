@@ -5,10 +5,28 @@ from app.database.models.user import User
 from app.servers.user.dependencies import CurrentUser
 from app.database.dependencies import get_session
 from app.schemas.order_image import OrderImageUrl
-from app.servers.user.services.order_image.get import get_user_order_photo, get_user_order_photos
+from app.servers.user.services.order_image.get import get_user_deleted_order_photos, get_user_order_photo, get_user_order_photos
 
 router = APIRouter()
 
+
+@router.get("/{order_id}/deleted", response_model=list[OrderImageUrl])
+async def get_deleted_order_images(
+    current_user: CurrentUser,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request: Request,
+    order_id: int
+):
+    """Endpoint для получения списка url изображений заказа"""
+
+    storage = request.app.state.photo_storage
+
+    return await get_user_deleted_order_photos(
+        session=session,
+        storage=storage,
+        user=current_user,
+        order_id=order_id
+    )
 
 @router.get("/{order_id}/{position}", response_model=OrderImageUrl)
 async def get_order_image(
