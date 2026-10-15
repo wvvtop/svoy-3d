@@ -18,7 +18,7 @@ async def create_order(
     session: Annotated[AsyncSession, Depends(get_session)],
     front: UploadFile = File(...),
     left: UploadFile = File(...),
-    right: UploadFile = File(...),
+    # right: UploadFile = File(...),
     back: UploadFile = File(...),
 ):
     """
@@ -32,7 +32,7 @@ async def create_order(
     photos = {
         PhotoPosition.FRONT: front,
         PhotoPosition.LEFT: left,
-        PhotoPosition.RIGHT: right,
+        # PhotoPosition.RIGHT: right,
         PhotoPosition.BACK: back,
     }
 
