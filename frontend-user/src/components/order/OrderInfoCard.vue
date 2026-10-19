@@ -1,6 +1,11 @@
 <template>
   <article class="order-card">
-    <div class="order-info">
+    <component
+      :is="clickable ? 'RouterLink' : 'div'"
+      :to="clickable ? { name: 'Order', params: { slug: order.id } } : undefined"
+      class="order-info"
+      :class="{ 'order-info--clickable': clickable }"
+    >
       <header class="order-info__header">
         <span class="order-info__id">Заказ №{{ order.id }}</span>
         <span
@@ -14,77 +19,30 @@
       <p class="order-info__date">
         Создан: {{ formatDate(order.created_at) }}
       </p>
-    </div>
-    <div class="order-info__actions">
-      <ButtonComponent
-        :text="actionConfig.text"
-        :variant="actionConfig.variant"
-        :disabled="isProcessing"
-        @action="handleAction"
-      />
+    </component>
+
+    <div v-if="$slots.actions" class="order-info__actions" @click.stop>
+      <slot name="actions" :order="order" ></slot>
     </div>
   </article>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { formatDate } from '@/utils/formatDate'
-import { getStatus } from '@/utils/formatStatus'
-import ButtonComponent from '../ButtonComponent.vue';
-import { ordersApi } from '@/api/orders';
+import { formatDate } from '@/utils/formatDate';
+import { getStatus } from '@/utils/formatStatus';
+import { computed } from 'vue';
 
-const emit = defineEmits(['deleted', 'restored']);
 const status = computed(() => getStatus(props.order.status));
-const isProcessing = ref(false);
-
-const actionConfig = computed(() =>
-  props.action === 'delete'
-    ? {
-        text: '✖',
-        variant: 'circle-delete',
-        confirmMsg: `Удалить заказ №${props.order.id}?`,
-        request: () => ordersApi.delete(props.order.id),
-        emitName: 'deleted',
-      }
-    : {
-        text: '←',
-        variant: 'circle-restore',
-        confirmMsg: `Вернуть заказ №${props.order.id} из корзины?`,
-        request: () => ordersApi.restore(props.order.id),
-        emitName: 'restored',
-      }
-);
-
-const handleAction = async () => {
-  if (isProcessing.value) return;
-  if (!confirm(actionConfig.value.confirmMsg)) return;
-
-  isProcessing.value = true;
-  try {
-    await actionConfig.value.request();
-    emit(actionConfig.value.emitName, props.order.id);
-  } catch (err) {
-    console.error(`Не удалось выполнить ${props.action}:`, err);
-  } finally {
-    isProcessing.value = false;
-  }
-};
 
 const props = defineProps({
   order: { type: Object, required: true },
-  // 'delete' — обычный список, 'restore' — корзина
-  action: {
-    type: String,
-    default: 'delete',
-    validator: (v) => ['delete', 'restore'].includes(v),
-  },
+  clickable: { type: Boolean, default: false}
 });
 </script>
 
 <style scoped>
 .order-card {
   display: flex;
-
 }
 
 .order-info {
@@ -96,8 +54,18 @@ const props = defineProps({
   display: flex;
   flex-direction: column;
   gap: 8px;
+
+  /* Сброс стилей ссылки (убираем синий цвет и подчеркивание) */
+  text-decoration: none;
+  color: inherit;
 }
 
+/* Курсор-рука только для активных заказов */
+.order-info--clickable {
+  cursor: pointer;
+}
+
+/* Базовые стили внутренностей */
 .order-info__header {
   display: flex;
   justify-content: space-between;
@@ -116,31 +84,15 @@ const props = defineProps({
   border-radius: 999px;
 }
 
-/* Статусы — по семантике */
-.order-info__status--success {
-  background: var(--color-success-subtle);
-  color: var(--color-success);
-}
-.order-info__status--warning {
-  background: var(--color-warning-subtle);
-  color: var(--color-warning);
-}
-.order-info__status--danger {
-  background: var(--color-danger-subtle);
-  color: var(--color-danger);
-}
-.order-info__status--primary {
-  background: var(--color-primary-subtle);
-  color: var(--color-primary);
-}
-.order-info__status--muted {
-  background: var(--color-surface-hover);
-  color: var(--color-text-muted);
-}
-
 .order-info__date {
   font-size: 14px;
   color: var(--color-text-muted);
   margin: 0;
 }
+
+.order-info__status--success { background: var(--color-success-subtle); color: var(--color-success); }
+.order-info__status--warning { background: var(--color-warning-subtle); color: var(--color-warning); }
+.order-info__status--danger { background: var(--color-danger-subtle); color: var(--color-danger); }
+.order-info__status--primary { background: var(--color-primary-subtle); color: var(--color-primary); }
+.order-info__status--muted { background: var(--color-surface-hover); color: var(--color-text-muted); }
 </style>

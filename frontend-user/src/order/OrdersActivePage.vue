@@ -2,13 +2,28 @@
 import { ref, onMounted } from 'vue'
 import { ordersApi } from '@/api/orders'
 import OrderCard from '@/components/order/OrderCard.vue'
+import ButtonComponent from '@/components/ButtonComponent.vue'
 
 const orders = ref([])
 const isLoading = ref(false)
 const error = ref(null)
 
-function onDeleted(id) {
-  orders.value = orders.value.filter((o) => o.id !== id);
+const processingIds = ref(new Set())
+
+async function handleDelete(id) {
+  if (!confirm(`Удалить заказ №${id}?`)) return
+  if (processingIds.value.has(id)) return
+
+  processingIds.value.add(id)
+  try {
+    await ordersApi.delete(id)                              // ждём ответ
+    orders.value = orders.value.filter((o) => o.id !== id)  // убираем ТОЛЬКО после успеха
+  } catch (err) {
+    console.error('Не удалось удалить заказ:', err)
+    error.value = err.response?.data?.detail || 'Не удалось удалить заказ'
+  } finally {
+    processingIds.value.delete(id)
+  }
 }
 
 onMounted(async () => {
@@ -47,8 +62,12 @@ onMounted(async () => {
         v-for="order in orders"
         :key="order.id"
         :order="order"
-        @deleted="onDeleted"
-      />
+        clickable>
+        <template #actions>
+          <ButtonComponent text="✖" variant="circle-delete"
+            @action="handleDelete(order.id)" />
+        </template>
+      </OrderCard>
     </div>
   </div>
 </template>

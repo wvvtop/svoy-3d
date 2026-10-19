@@ -4,22 +4,17 @@ import OrderInfoCard from './OrderInfoCard.vue';
 
 defineProps({
   order: { type: Object, required: true },
-  action: {
-    type: String,
-    default: 'delete',
-    validator: (v) => ['delete', 'restore'].includes(v),
-  },
+  clickable: { type: Boolean, default: false}
 });
-
-const emit = defineEmits(['deleted', 'restored']);
 </script>
 
 <template>
   <article class="order-card">
-    <OrderInfoCard :order="order"
-      :action="action"
-      @deleted="emit('deleted', $event)"
-      @restored="emit('restored', $event)" />
+    <OrderInfoCard :order="order" :clickable="clickable">
+      <template v-if="$slots.actions" #actions>
+        <slot name="actions" ></slot>
+      </template>
+    </OrderInfoCard>
     <OrderImageCard :images="order.images" compact />
   </article>
 </template>

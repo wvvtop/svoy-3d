@@ -1,6 +1,6 @@
 // src/stores/auth.js
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/utils/getErrorMessage'
 
@@ -47,10 +47,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const logout = () => {
+  const clearAuth = () => {
     token.value = null
     userEmail.value = null
     localStorage.removeItem('token')
+  }
+
+  const logout = () => {
+    clearAuth()
     window.location.href = '/login'
   }
 
@@ -70,7 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const isAuthenticated = () => !!token.value
+  const isAuthenticated = computed(() => !!token.value)
 
   return {
     token,
@@ -82,5 +86,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     isAuthenticated,
     initializeAuth,
+    clearAuth
   }
 })
