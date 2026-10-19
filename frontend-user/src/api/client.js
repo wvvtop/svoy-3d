@@ -1,5 +1,6 @@
 // src/api/client.js
 import router from '@/router'
+import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 
 const apiClient = axios.create({
@@ -31,7 +32,8 @@ apiClient.interceptors.response.use(
     const isAuthEndpoint =
       url.includes('/auth/login') || url.includes('/auth/register')
     if (status === 401 && !isAuthEndpoint) {
-      localStorage.removeItem('token')
+      const authStore = useAuthStore()
+      authStore.clearAuth()
       router.push({ name: "Login" })
     }
 

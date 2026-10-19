@@ -36,12 +36,12 @@ const routes = [
     component: ProfilePage,
     meta: { requiresAuth: true }
   },
-  // {
-  //   path: '/order/:slug',
-  //   name: 'Order',
-  //   component: OrderPage,
-  //   meta: { requiresAuth: true }
-  // }
+  {
+    path: '/order/:slug',
+    name: 'Order',
+    component: OrderPage,
+    meta: { requiresAuth: true }
+  },
   {
     path: '/orders/create',
     name: 'create-order',
@@ -71,11 +71,11 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   const authStore = useAuthStore()
 
-  if (to.meta.requiresAuth && !authStore.isAuthenticated()) {
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return { name: 'Login' }
   }
 
-  if (to.meta.requiresGuest && authStore.isAuthenticated()) {
+  if (to.meta.requiresGuest && authStore.isAuthenticated) {
     return { name: 'Home' }   // или '/' , или '/dashboard'
   }
 

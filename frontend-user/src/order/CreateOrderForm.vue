@@ -40,7 +40,7 @@ import ButtonComponent from '@/components/ButtonComponent.vue';
 import ImageUploader from '@/components/ImageUploader.vue';
 import SpacerComponent from '@/components/SpacerComponent.vue';
 import TextAreaComponent from '@/components/TextareaComponent.vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -86,7 +86,7 @@ const handleSubmit = async () => {
     left_photo.value  = null;
     order_request.value = '';
 
-    router.push({ name: "Orders" })
+    router.push({ name: "orders" })
   } catch (err) {
     alert(err.value)
     console.error(err);

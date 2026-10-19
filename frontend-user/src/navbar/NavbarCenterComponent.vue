@@ -1,6 +1,6 @@
 <template>
   <div class="navbar_center">
-    <template v-if="authStore.isAuthenticated()">
+    <template v-if="authStore.isAuthenticated">
       <div class="navbar_center">
         <ButtonLink :to="{ name: 'orders' }" text="Заказы" variant="nav"/>
       </div>
