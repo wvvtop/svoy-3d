@@ -7,8 +7,12 @@ from app.database.models.generation_job import (
     GenerationMode,
 )
 from app.database.models.order_model import OrderModel
+from app.database.models.chat_conversation import ChatConversation
+from app.database.models.chat_message import ChatMessage
 
 __all__ = [
+    "ChatConversation",
+    "ChatMessage",
     "GenerationJob",
     "GenerationJobStatus",
     "GenerationMode",
