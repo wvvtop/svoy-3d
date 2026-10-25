@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import PageLayout from '@/layouts/PageLayout.vue';
 import CreateOrderForm from './CreateOrderForm.vue';
 

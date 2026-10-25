@@ -1,47 +1,57 @@
 <template>
-  <div class="uploader" :class="{ 'uploader--dragging': isDragging,
-  'uploader--has-image': hasImage }">
-    <!-- Есть изображение — показываем превью + крестик -->
-    <template v-if="hasImage">
-      <img :src="previewSrc" :alt="alt" class="uploader__img" />
+  <div class="uploader-wrapper">
+    <div class="uploader" :class="rootClasses">
+      <template v-if="hasPreview">
+        <img :src="previewSrc" :alt="alt" class="uploader__img" />
 
-      <button
-        type="button"
-        class="uploader__remove"
-        aria-label="Удалить изображение"
-        @click.stop="removeImage"
-      >
-        ✕
-      </button>
-    </template>
+        <span
+          v-if="reviewBadge"
+          class="uploader__badge"
+          :class="`uploader__badge--${reviewStatus}`"
+        >
+          {{ reviewBadge }}
+        </span>
 
-    <!-- Нет изображения — зона загрузки -->
-    <template v-else>
-      <input
-        ref="fileInput"
-        type="file"
-        class="uploader__input"
-        :accept="accept"
-        @change="onFileInput"
-      />
+        <button
+          v-if="!disabled"
+          type="button"
+          class="uploader__remove"
+          aria-label="Удалить изображение"
+          @click.stop="removeImage"
+        >
+          ✕
+        </button>
+      </template>
 
-      <button
-        type="button"
-        class="uploader__drop"
-        @click="openFileDialog"
-        @dragover.prevent="isDragging = true"
-        @dragleave.prevent="isDragging = false"
-        @drop.prevent="onDrop"
-      >
-        <svg class="uploader__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        <span class="uploader__text">Перетащите фото</span>
-        <span class="uploader__hint">или нажмите для выбора</span>
-      </button>
-    </template>
+      <template v-else>
+        <input
+          ref="fileInput"
+          type="file"
+          class="uploader__input"
+          :accept="accept"
+          :disabled="disabled"
+          @change="onFileInput"
+        />
+        <button
+          type="button"
+          class="uploader__drop"
+          :disabled="disabled"
+          @click="openFileDialog"
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
+          @drop.prevent="onDrop"
+        >
+          <svg class="uploader__icon" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span class="uploader__text">Перетащите фото</span>
+          <span class="uploader__hint">или нажмите для выбора</span>
+        </button>
+      </template>
+    </div>
 
-    <p v-if="error" class="uploader__error">{{ error }}</p>
+    <p v-if="problemText" class="uploader__error">{{ problemText }}</p>
   </div>
 </template>
 
@@ -49,41 +59,56 @@
 import { ref, computed, onBeforeUnmount, watch } from 'vue'
 
 const props = defineProps({
-  modelValue: {
-    type: [File, null],
-    default: null,
-  },
-  // URL уже загруженного изображения (например, из БД)
-  initialPreview: {
-    type: String,
-    default: '',
-  },
-  accept: {
-    type: String,
-    default: 'image/*',
-  },
-  maxSizeMb: {
-    type: Number,
-    default: 15,
-  },
-  alt: {
-    type: String,
-    default: 'Изображение',
-  },
+  modelValue:     { type: [File, null], default: null },
+  previewUrl:     { type: String, default: '' },   // новое
+  initialPreview: { type: String, default: '' },   // backward-compat
+  reviewStatus:   { type: String, default: '' },   // 'pending'|'approved'|'rejected'|''
+  reviewError:    { type: String, default: '' },
+  uploadError:    { type: String, default: '' },
+  disabled:       { type: Boolean, default: false },
+  accept:         { type: String, default: 'image/*' },
+  maxSizeMb:      { type: Number, default: 15 },
+  alt:            { type: String, default: 'Изображение' },
 })
 
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'remove'])
 
 const fileInput = ref(null)
 const isDragging = ref(false)
 const error = ref('')
 const localPreview = ref('')
 
-// Если задан modelValue или initialPreview — показываем изображение
-const previewSrc = computed(() => localPreview.value || props.initialPreview)
-const hasImage = computed(() => Boolean(previewSrc.value))
+const externalPreview = computed(() => props.previewUrl || props.initialPreview)
+const previewSrc = computed(() => localPreview.value || externalPreview.value)
+const hasPreview = computed(() => Boolean(previewSrc.value))
 
-// Создаём/освобождаем blob URL при изменении файла
+const REVIEW_LABELS = {
+  pending:  'На проверке',
+  approved: 'Одобрено',
+  rejected: 'Отклонено',
+}
+const reviewBadge = computed(() => {
+  if (!props.reviewStatus || !hasPreview.value) return ''
+  return REVIEW_LABELS[props.reviewStatus] || ''
+})
+
+const problemText = computed(() =>
+  props.uploadError || props.reviewError || error.value || ''
+)
+
+const hasError = computed(
+  () =>
+    Boolean(problemText.value) ||
+    props.reviewStatus === 'rejected'
+)
+
+const rootClasses = computed(() => ({
+  'uploader--dragging':  isDragging.value,
+  'uploader--has-image': hasPreview.value,
+  'uploader--disabled':  props.disabled,
+  'uploader--error':     hasError.value,
+}))
+
 watch(
   () => props.modelValue,
   (file) => {
@@ -99,58 +124,63 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  if (localPreview.value) {
-    URL.revokeObjectURL(localPreview.value)
-  }
+  if (localPreview.value) URL.revokeObjectURL(localPreview.value)
 })
 
 function openFileDialog() {
+  if (props.disabled) return
   fileInput.value?.click()
 }
 
 function onFileInput(event) {
   const file = event.target.files?.[0]
   if (file) handleFile(file)
-  // сбрасываем input, чтобы можно было выбрать тот же файл повторно
   event.target.value = ''
 }
 
 function onDrop(event) {
   isDragging.value = false
+  if (props.disabled) return
   const file = event.dataTransfer?.files?.[0]
   if (file) handleFile(file)
 }
 
 function handleFile(file) {
   error.value = ''
-
   if (!file.type.startsWith('image/')) {
     error.value = 'Можно загрузить только изображение'
     return
   }
-
   const maxBytes = props.maxSizeMb * 1024 * 1024
   if (file.size > maxBytes) {
     error.value = `Файл больше ${props.maxSizeMb} МБ`
     return
   }
-
   emit('update:modelValue', file)
   emit('change', file)
 }
 
 function removeImage() {
+  if (!confirm('Удалить фотографию?')) return
   error.value = ''
   emit('update:modelValue', null)
   emit('change', null)
+  emit('remove')
 }
 </script>
 
 <style scoped>
+.uploader-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
 .uploader {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;         /* по умолчанию — квадрат */
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   overflow: hidden;
   background: var(--color-surface);
@@ -168,7 +198,17 @@ function removeImage() {
   border-color: var(--color-border);
 }
 
-/* ---- превью ---- */
+.uploader--error {
+  border-color: var(--color-danger);
+  border-style: solid;
+  box-shadow: 0 0 0 1px var(--color-danger) inset;
+}
+
+.uploader--disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .uploader__img {
   width: 100%;
   height: 100%;
@@ -176,7 +216,6 @@ function removeImage() {
   display: block;
 }
 
-/* ---- крестик удаления ---- */
 .uploader__remove {
   position: absolute;
   top: 6px;
@@ -186,7 +225,7 @@ function removeImage() {
   border: none;
   border-radius: 50%;
   background: rgb(15 23 42 / 0.7);
-  color: white;
+  color: var(--color-on-primary);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
@@ -195,16 +234,27 @@ function removeImage() {
   justify-content: center;
   transition: background 0.15s, transform 0.15s;
 }
-
 .uploader__remove:hover {
   background: var(--color-danger);
   transform: scale(1.08);
 }
 
-/* ---- зона загрузки ---- */
-.uploader__input {
-  display: none;
+.uploader__badge {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-on-primary);
+  background: var(--color-secondary);
 }
+.uploader__badge--pending  { background: var(--color-warning); color: var(--color-on-warning); }
+.uploader__badge--approved { background: var(--color-success); }
+.uploader__badge--rejected { background: var(--color-danger); }
+
+.uploader__input { display: none; }
 
 .uploader__drop {
   width: 100%;
@@ -221,39 +271,15 @@ function removeImage() {
   padding: 12px;
   font-family: inherit;
 }
+.uploader__drop:hover { color: var(--color-text); }
 
-.uploader__drop:hover {
-  color: var(--color-text);
-}
+.uploader__icon { width: 32px; height: 32px; opacity: 0.7; }
+.uploader__text { font-size: 14px; font-weight: 500; color: var(--color-text); }
+.uploader__hint { font-size: 12px; color: var(--color-text-muted); }
 
-.uploader__icon {
-  width: 32px;
-  height: 32px;
-  opacity: 0.7;
-}
-
-.uploader__text {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-text);
-}
-
-.uploader__hint {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-/* ---- ошибка ---- */
 .uploader__error {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
   margin: 0;
-  padding: 4px 8px;
-  font-size: 12px;
-  background: var(--color-danger);
-  color: var(--color-on-danger);
-  text-align: center;
+  font-size: 13px;
+  color: var(--color-danger);
 }
 </style>

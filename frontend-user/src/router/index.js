@@ -37,7 +37,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/order/:slug',
+    path: '/order/:id',
     name: 'Order',
     component: OrderPage,
     meta: { requiresAuth: true }

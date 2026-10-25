@@ -2,7 +2,7 @@
   <article class="order-card">
     <component
       :is="clickable ? 'RouterLink' : 'div'"
-      :to="clickable ? { name: 'Order', params: { slug: order.id } } : undefined"
+      :to="clickable ? { name: 'Order', params: { id: order.id } } : undefined"
       class="order-info"
       :class="{ 'order-info--clickable': clickable }"
     >
