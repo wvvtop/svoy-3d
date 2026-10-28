@@ -83,9 +83,9 @@ const previewSrc = computed(() => localPreview.value || externalPreview.value)
 const hasPreview = computed(() => Boolean(previewSrc.value))
 
 const REVIEW_LABELS = {
-  pending:  'На проверке',
-  approved: 'Одобрено',
-  rejected: 'Отклонено',
+  PENDING:  'На проверке',
+  APPROVED: 'Одобрено',
+  REJECTED: 'Отклонено',
 }
 const reviewBadge = computed(() => {
   if (!props.reviewStatus || !hasPreview.value) return ''

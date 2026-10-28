@@ -9,6 +9,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.schemas.enums.order import PhotoReviewStatus
 
 
 class OrderPhoto(Base):
@@ -73,6 +74,18 @@ class OrderPhoto(Base):
         String(30),
         nullable=False,
         default="UPLOADED",
+    )
+
+    review_status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default=PhotoReviewStatus.PENDING.value,
+        server_default=PhotoReviewStatus.PENDING.value,
+        index=True,
+    )
+    review_error: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(
