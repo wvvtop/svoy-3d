@@ -21,3 +21,8 @@ class PhotoPosition(str, Enum):
     LEFT = "left"
     RIGHT = "right"
     BACK = "back"
+
+class PhotoReviewStatus(str, Enum):
+    PENDING  = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"

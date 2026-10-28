@@ -50,7 +50,9 @@ async def get_user_deleted_order_photos(
             id=photo.id,
             position=photo.position,
             preview_url=preview_url,
-            compressed_url=compressed_url
+            compressed_url=compressed_url,
+            review_status=photo.review_status,
+            review_error=photo.review_error
         ))
 
     return result
@@ -92,7 +94,9 @@ async def get_user_order_photos(
             id=photo.id,
             position=photo.position,
             preview_url=preview_url,
-            compressed_url=compressed_url
+            compressed_url=compressed_url,
+            review_status=photo.review_status,
+            review_error=photo.review_error
         ))
 
     return result
@@ -135,7 +139,9 @@ async def get_user_order_photo(
         id=order_photo.id,
         position=order_photo.position,
         preview_url=preview_url,
-        compressed_url=compressed_url
+        compressed_url=compressed_url,
+        review_status=order_photo.review_status,
+        review_error=order_photo.review_error
     )
     
 

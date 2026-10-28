@@ -44,5 +44,5 @@ async def authenticate_user(
 
 async def login_user(session: AsyncSession, email: str, password: str) -> str:
     user = await authenticate_user(session, email, password)
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(user.id, user.email)
     return access_token

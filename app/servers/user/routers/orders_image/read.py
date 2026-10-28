@@ -36,7 +36,7 @@ async def get_order_image(
     order_id: int,
     position: str
 ):
-    """Endpoint для получения списка url изображений заказа"""
+    """Endpoint для получения url конкретной позиции изображения заказа"""
 
     storage = request.app.state.photo_storage
 

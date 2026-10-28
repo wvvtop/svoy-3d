@@ -15,7 +15,6 @@ function decodeJwt(token) {
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
-  const userEmail = ref(null)
   const isLoading = ref(false)
   const error = ref(null)
 
@@ -38,6 +37,12 @@ export const useAuthStore = defineStore('auth', () => {
     return Number.isFinite(id) ? id : null
   })
 
+  const userEmail = computed(() => {
+    if (user.value?.email) return user.value.email
+    const email = jwtPayload.value?.email
+    return typeof email === 'string' ? email : null
+  })
+
   const register = async (email, password) => {
     isLoading.value = true
     error.value = null
@@ -45,7 +50,6 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.register({ email, password })
       token.value = response.data.access_token
       localStorage.setItem('token', token.value)
-      userEmail.value = email
       return true
     } catch (err) {
       error.value = err.response?.data?.error || 'Ошибка регистрации'
@@ -62,7 +66,6 @@ export const useAuthStore = defineStore('auth', () => {
       const response = await authApi.login({ email, password })
       token.value = response.data.access_token
       localStorage.setItem('token', token.value)
-      userEmail.value = email
       return true
     } catch (err) {
       console.log(err.response?.data)
@@ -75,8 +78,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const clearAuth = () => {
     token.value = null
-    userEmail.value = null
     user.value = null
+    error.value = null
     localStorage.removeItem('token')
   }
 
@@ -86,18 +89,18 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const initializeAuth = () => {
-    const savedToken = localStorage.getItem('token')
-    if (!savedToken) return
+    ////const savedToken = localStorage.getItem('token')
+    ////if (!savedToken) return
 
-    token.value = savedToken
+    ////token.value = savedToken
 
     // Email есть в JWT только если бэк его туда положит.
     // Сейчас в payload только sub (id) — userEmail восстанавливать не из чего,
     // поэтому молча пропускаем.
-    const payload = decodeJwt(savedToken)
-    if (payload?.email) {
-      userEmail.value = payload.email
-    }
+    // const payload = decodeJwt(savedToken)
+    // //if (payload?.email) {
+    // //  userEmail.value = payload.email
+    // //}
 
     // Когда появится /auth/me — раскомментировать:
     // initializeAuth станет async, а в main.js — await initializeAuth().

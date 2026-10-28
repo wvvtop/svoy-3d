@@ -15,7 +15,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
     """Метод для верификация пароля"""
     return password_hash.verify(password, hashed_password)
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, email) -> str:
     """Создание jwt token"""
     expire = (
         datetime.now(timezone.utc)
@@ -25,6 +25,7 @@ def create_access_token(user_id: int) -> str:
     )
     payload = {
         "sub": str(user_id),
+        "email": email,
         "exp": expire,
     }
 

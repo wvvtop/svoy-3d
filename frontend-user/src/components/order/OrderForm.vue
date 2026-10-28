@@ -109,14 +109,14 @@ const formError = ref('')
 let savedTimer = null
 
 // ---- helpers ----
-function getOriginalUrl(pos) {
-  return original.photos[pos]?.url || ''
+function getOriginalPreviewUrl(pos) {
+  return original.photos[pos]?.previewUrl || ''
 }
 function getPreviewUrl(pos) {
   const s = slots[pos]
   if (s.file) return ''         // ImageUploader покажет blob из file
   if (s.removed) return ''      // пользователь удалил
-  return getOriginalUrl(pos)
+  return getOriginalPreviewUrl(pos)
 }
 function getReviewStatus(pos) {
   if (slots[pos].file || slots[pos].removed) return ''  // для нового/удалённого не показываем
@@ -152,13 +152,13 @@ function onSlotChange(pos) {
   if (s.file) {
     // выбрали новый файл — если был removed, надо будет сначала удалить старое
     // флаг removed не сбрасываем: если true — нужно удалить оригинал перед upload
-    if (!getOriginalUrl(pos)) s.removed = false
+    if (!getOriginalPreviewUrl(pos)) s.removed = false
   }
   try { formError.value = '' } catch {}
 }
 function onSlotRemove(pos) {
   const s = slots[pos]
-  const hadOriginal = Boolean(getOriginalUrl(pos)) && !s.removed
+  const hadOriginal = Boolean(getOriginalPreviewUrl(pos)) && !s.removed
   if (s.file) {
     // убрали новый файл; если оригинала нет — слот пуст
     s.file = null
@@ -187,9 +187,10 @@ async function loadOrder() {
       const pos = (p.position || '').toLowerCase()
       if (!PHOTO_POSITIONS.includes(pos)) continue
       original.photos[pos] = {
-        url: p.url || p.preview_url || '',
-        reviewStatus: p.review_status || p.status || '',
-        reviewError: p.review_error || p.error || '',
+        previewUrl:    p.preview_url || '',
+        compressedUrl: p.compressed_url || '',
+        reviewStatus:  p.review_status || '',
+        reviewError:   p.review_error || '',
       }
     }
 
@@ -255,7 +256,6 @@ async function submitCreate() {
 async function submitEdit() {
   submitting.value = true
   const failed = []
-  let textSaved = true
 
   // 1) Пожелания
   if (form.request !== original.request) {
@@ -263,7 +263,7 @@ async function submitEdit() {
       await ordersApi.updateRequest(props.orderId, form.request)
       original.request = form.request
     } catch (err) {
-      textSaved = false
+
       failed.push(`пожелания: ${extractApiError(err)}`)
     }
   }
@@ -273,7 +273,7 @@ async function submitEdit() {
     const s = slots[pos]
     s.uploadError = ''
     const orig = original.photos[pos]
-    const hasOrigUrl = Boolean(orig?.url)
+    const hasOrigUrl = Boolean(orig?.previewUrl)
     const needsDelete = hasOrigUrl && (s.removed || s.file)
     const needsUpload = Boolean(s.file)
     if (!needsDelete && !needsUpload) continue
@@ -289,9 +289,10 @@ async function submitEdit() {
         const fresh = await ordersApi.getPhoto(props.orderId, pos).catch(() => null)
         original.photos[pos] = fresh
           ? {
-              url: fresh.url || fresh.preview_url || '',
-              reviewStatus: fresh.review_status || fresh.status || 'pending',
-              reviewError: fresh.review_error || fresh.error || '',
+              previewUrl:    fresh.preview_url || '',
+              compressedUrl: fresh.compressed_url || '',
+              reviewStatus:  fresh.review_status || 'PENDING',
+              reviewError:   fresh.review_error || '',
             }
           : null
         s.file = null
