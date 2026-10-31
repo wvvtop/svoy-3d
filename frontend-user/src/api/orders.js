@@ -4,16 +4,19 @@ export const ordersApi = {
   list: () => apiClient.get('/orders/').then((r) => r.data),
   get: (id) => apiClient.get(`/orders/${id}`).then((r) => r.data),
   getImages: (id) => apiClient.get(`/orders/image/${id}`).then((r) => r.data),
-  create: ({ front, left, back }) => {
+  create: ({ front, left, back, requests = ''}) => {
     const formData = new FormData();
     formData.append('front', front);
     formData.append('left',  left);
     formData.append('back',  back);
-
+    formData.append('requests', requests ?? '')
     return apiClient
       .post('/orders/', formData)
       .then((r) => r.data);
   },
+
+  getRequests: (id) => apiClient.get(`/orders/${id}/details`).then((r) => r.data),
+
   // ---- STUB: реального эндпоинта пока нет ----
   updateRequest: async (id, request) => {
     // TODO: заменить, когда появится PATCH /orders/:id

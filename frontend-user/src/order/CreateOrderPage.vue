@@ -1,6 +1,7 @@
 <script setup>
 import PageLayout from '@/layouts/PageLayout.vue';
-import CreateOrderForm from './CreateOrderForm.vue';
+// import CreateOrderForm from './CreateOrderForm.vue';
+import OrderForm from '@/components/order/OrderForm.vue';
 
 </script>
 
@@ -8,7 +9,8 @@ import CreateOrderForm from './CreateOrderForm.vue';
   <PageLayout>
     <template #page__content_item>
       <div class="form_wrapper">
-        <CreateOrderForm />
+        <OrderForm />
+        <!-- <CreateOrderForm /> -->
       </div>
     </template>
   </PageLayout>

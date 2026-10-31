@@ -10,7 +10,7 @@
 
     <h2 class="order-form__requests">Ваши пожелания (можете оставить пустым)</h2>
     <TextAreaComponent
-      v-model="form.request"
+      v-model="form.requests"
       :rows="8"
       placeholder="Ваши пожелания по заказу (можете оставить пустым)"
     />
@@ -80,11 +80,11 @@ const POSITION_LABELS = {
 }
 
 // ---- состояние формы ----
-const form = reactive({ request: '' })
+const form = reactive({ requests: '' })
 
 // снимок с сервера
 const original = reactive({
-  request: '',
+  requests: '',
   photos: {
     front: null,
     back: null,
@@ -129,7 +129,7 @@ function getReviewError(pos) {
 
 // ---- dirty ----
 const isDirty = computed(() => {
-  if (form.request !== original.request) return true
+  if (form.requests !== original.requests) return true
   return PHOTO_POSITIONS.some((p) => slots[p].file || slots[p].removed)
 })
 
@@ -173,13 +173,14 @@ async function loadOrder() {
   loading.value = true
   formError.value = ''
   try {
-    const [order, photos] = await Promise.all([
+    const [order, photos, details] = await Promise.all([
       ordersApi.get(props.orderId),
       ordersApi.getImages(props.orderId).catch(() => []),
+      ordersApi.getRequests(props.orderId).catch(() => null),
     ])
 
-    original.request = order?.request || ''
-    form.request = original.request
+    original.requests = details?.requests ?? ''
+    form.requests = original.requests
 
     for (const pos of PHOTO_POSITIONS) original.photos[pos] = null
 
@@ -232,20 +233,14 @@ async function submitCreate() {
   if (!validateCreate()) return
   submitting.value = true
   try {
-    const order = await ordersApi.create({
+    await ordersApi.create({
       front: slots.front.file,
       left:  slots.left.file,
       back:  slots.back.file,
+      requests: form.requests,
     })
 
-    // fire-and-forget: попытка сохранить пожелания
-    if (form.request) {
-      try { await ordersApi.updateRequest(order.id, form.request) } catch (e) {
-        console.warn('Не удалось сохранить пожелания:', e)
-      }
-    }
-
-    router.push({ name: 'order-details', params: { id: order.id } })
+    router.push({ name: 'orders',  })
   } catch (err) {
     formError.value = extractApiError(err)
   } finally {
@@ -258,10 +253,10 @@ async function submitEdit() {
   const failed = []
 
   // 1) Пожелания
-  if (form.request !== original.request) {
+  if (form.requests !== original.requests) {
     try {
-      await ordersApi.updateRequest(props.orderId, form.request)
-      original.request = form.request
+      await ordersApi.updateRequest(props.orderId, form.requests)
+      original.requests = form.requests
     } catch (err) {
 
       failed.push(`пожелания: ${extractApiError(err)}`)
@@ -324,8 +319,11 @@ async function submitEdit() {
 // ---- предупреждение при уходе с несохранёнными изменениями ----
 onBeforeRouteLeave((to, from, next) => {
   if (isDirty.value && !submitting.value) {
-    if (window.confirm('Есть несохранённые изменения. Уйти со страницы?')) next()
-    else next(false)
+    if(isEdit.value) {
+      if (window.confirm('Есть несохранённые изменения. Уйти со страницы?')) next()
+      else next(false)
+    }
+    else next()
     return
   }
   next()
