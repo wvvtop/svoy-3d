@@ -3,10 +3,12 @@ from .auth import router as auth_router
 from .orders import orders_router
 from .orders_image import orders_image_router
 from .orders_chat import orders_chat_router
+from .order_details import order_details_router
 
 router = APIRouter(prefix="/api")
 router.include_router(orders_chat_router)
 router.include_router(auth_router)
 router.include_router(orders_image_router)
 router.include_router(orders_router)
+router.include_router(order_details_router)
 

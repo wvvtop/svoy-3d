@@ -4,6 +4,7 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.database.models import order_details
 
 
 class Order(Base):
@@ -52,5 +53,13 @@ class Order(Base):
         "OrderModel",
         back_populates="order",
         cascade="all, delete-orphan",
+    )
+
+    details: Mapped["OrderDetails | None"] = relationship(
+        "OrderDetails",
+        back_populates="order",
+        uselist=False,                       # один-к-одному
+        cascade="all, delete-orphan",        # удалили заказ — ушли детали
+        single_parent=True,
     )
 

@@ -1,8 +1,10 @@
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order import Order
+from app.database.models.order_details import OrderDetails
 from app.database.models.user import User
 from app.schemas.enums.order import PhotoPosition
+from app.servers.user.repositories.order_details.order_details import create_order_details
 from app.servers.user.services.order_image.upload import cleanup_uploaded_objects, upload_order_image
 from app.services.storage import StorageService
 from fastapi import UploadFile
@@ -19,6 +21,7 @@ async def create_order_with_photos(
     storage: StorageService,
     user: User,
     photos: dict[PhotoPosition, UploadFile],
+    requests: str | None = None
 ) -> Order:
     """
     Создаёт заказ и сохраняет его фотографии.
@@ -90,9 +93,14 @@ async def create_order_with_photos(
                 status=PhotoStatus.UPLOADED,
             )
 
+        # ----------------------------------------------------
+        # 4. Создание details и сохранение запросов пользователя по заказу
+        # ----------------------------------------------------
+
+        details = await create_order_details(session=session, order_id=order.id, requests=requests)
 
         # -----------------------------------------------------
-        # 4. Только здесь завершаем transaction
+        # 5. Только здесь завершаем transaction
         # -----------------------------------------------------
 
         await session.commit()

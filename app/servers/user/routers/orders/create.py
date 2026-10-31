@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.user import User
 from app.servers.user.dependencies import CurrentUser
@@ -16,6 +16,7 @@ async def create_order(
     request: Request,
     current_user: CurrentUser,
     session: Annotated[AsyncSession, Depends(get_session)],
+    requests: str | None = Form(None),
     front: UploadFile = File(...),
     left: UploadFile = File(...),
     # right: UploadFile = File(...),
@@ -40,7 +41,8 @@ async def create_order(
         session=session,
         storage=storage,
         user=current_user,
-        photos=photos
+        photos=photos,
+        requests=requests
     )
     
     return {

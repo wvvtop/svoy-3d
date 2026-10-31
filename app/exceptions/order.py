@@ -81,3 +81,10 @@ class OrderAlreadyPurgedError(OrderError):
     status_code = status.HTTP_409_CONFLICT
     code = "order_already_purged"
     message = "Order data has already been purged"
+
+class OrderDetailsNotFoundError(OrderError):
+    """Детали заказа не найдены."""
+
+    status_code = status.HTTP_404_NOT_FOUND
+    code = "order_details_not_found"
+    message = "Order details not found"
