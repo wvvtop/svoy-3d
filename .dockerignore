@@ -8,3 +8,5 @@ __pycache__
 .idea
 .vscode
 README.md
+.frontend-user
+.frontend-admin
