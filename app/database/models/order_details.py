@@ -19,7 +19,7 @@ class OrderDetails(Base):
     )
 
     requests: Mapped[str | None] = mapped_column(
-        Text,
+        Text(length=500),
         nullable=True,
     )
 

@@ -7,3 +7,9 @@ class OrderDetailsRead(BaseModel):
     requests: str | None = None
     
     model_config = ConfigDict(from_attributes=True)
+
+class OrderRequestsRead(BaseModel):
+    order_id: int
+    requests: str | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
