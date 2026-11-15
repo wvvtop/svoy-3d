@@ -16,7 +16,12 @@ export const ordersApi = {
   },
 
   getRequests: (id) => apiClient.get(`/orders/${id}/details`).then((r) => r.data),
-
+  patchRequests: ({id, requests}) => {
+    console.log(id)
+    return apiClient
+      .patch(`/orders/${id}/details/requests`,  {requests} )
+      .then((r) => r.data)
+  },
   // ---- STUB: реального эндпоинта пока нет ----
   updateRequest: async (id, request) => {
     // TODO: заменить, когда появится PATCH /orders/:id

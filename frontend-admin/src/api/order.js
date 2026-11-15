@@ -2,8 +2,10 @@ import apiClient from "./client";
 
 export const ordersApi = {
   list: () => apiClient.get('/orders/').then((r) => r.data),
+  getRevision: () => apiClient.get('/orders/revision').then((r) => r.data),
   get: (id) => apiClient.get(`/orders/${id}`).then((r) => r.data),
   getImages: (id) => apiClient.get(`/orders/image/${id}`).then((r) => r.data),
+  getRequests: (id) => apiClient.get(`/orders/details/${id}`).then((r) => r.data),
   create: ({ front, left, back, requests = ''}) => {
     const formData = new FormData();
     formData.append('front', front);
@@ -14,6 +16,8 @@ export const ordersApi = {
       .post('/orders/', formData)
       .then((r) => r.data);
   },
+  sendToRevision: (id) => apiClient.patch(`/orders/${id}/revision`).then((r) => r.data),
+  revertFromRevision: (id) => apiClient.patch(`/orders/${id}/revision/revert`).then((r) => r.data),
 }
 
 export const chatApi = {

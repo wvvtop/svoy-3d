@@ -250,9 +250,9 @@ function removeImage() {
   color: var(--color-on-primary);
   background: var(--color-secondary);
 }
-.uploader__badge--pending  { background: var(--color-warning); color: var(--color-on-warning); }
-.uploader__badge--approved { background: var(--color-success); }
-.uploader__badge--rejected { background: var(--color-danger); }
+.uploader__badge--PENDING  { background: var(--color-warning); color: var(--color-on-warning); }
+.uploader__badge--APPROVED { background: var(--color-success); }
+.uploader__badge--REJECTED { background: var(--color-danger); }
 
 .uploader__input { display: none; }
 

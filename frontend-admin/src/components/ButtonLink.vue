@@ -52,7 +52,7 @@ defineProps({
   transform: translateY(-2px);
 }
 
-.orders__header-side .orders__nav-link.router-link-active {
+.orders__nav-link--active {
   background: var(--color-primary-active);
 }
 

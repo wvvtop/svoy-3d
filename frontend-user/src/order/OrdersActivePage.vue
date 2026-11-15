@@ -32,7 +32,6 @@ onMounted(async () => {
   try {
     // 1. Получаем список заказов
     orders.value = await ordersApi.list()
-
     // 2. Для каждого заказа догружаем фото
     await Promise.all(
       orders.value.map(async (order) => {

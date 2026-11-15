@@ -35,6 +35,9 @@
         <p v-if="slots[pos].localError" class="order-form__error">
           {{ slots[pos].localError }}
         </p>
+        <p v-if="slots[pos].uploadError" class="order-form__error">
+          {{ slots[pos].uploadError }}
+        </p>
       </div>
     </div>
 
@@ -255,7 +258,7 @@ async function submitEdit() {
   // 1) Пожелания
   if (form.requests !== original.requests) {
     try {
-      await ordersApi.updateRequest(props.orderId, form.requests)
+      await ordersApi.patchRequests({ id: props.orderId, requests: form.requests})
       original.requests = form.requests
     } catch (err) {
 
