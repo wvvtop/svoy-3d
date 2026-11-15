@@ -4,7 +4,7 @@ from app.exceptions.auth import UserNotFoundError
 from app.exceptions.order import OrderNotFoundError
 from app.repositories.user import get_user_by_id
 from app.schemas.order import AdminOrderResponse, OrderInfo
-from app.servers.admin.repositories.order.get import get_active_orders, get_active_orders_by_user_id, get_order_by_order_id
+from app.servers.admin.repositories.order.get import get_active_orders, get_active_orders_by_user_id, get_all_orders_on_revision, get_order_by_order_id
 
 
 async def get_order(
@@ -46,5 +46,14 @@ async def get_user_orders(
         session=session,
         user_id=user.id, 
     )
+
+    return [AdminOrderResponse.model_validate(order) for order in orders]
+
+async def get_orders_on_revision(
+    session: AsyncSession, 
+) -> list[AdminOrderResponse]:
+    """Получение информации о всех заказах пользователей, отправленных на доработку"""
+
+    orders = await get_all_orders_on_revision(session=session)
 
     return [AdminOrderResponse.model_validate(order) for order in orders]

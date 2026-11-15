@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import read
+from . import read, update
 
 orders_router = APIRouter(
     tags=["Роутер для работы с заказами клиентов"],
@@ -7,3 +7,4 @@ orders_router = APIRouter(
 )
 
 orders_router.include_router(read.router)
+orders_router.include_router(update.router)

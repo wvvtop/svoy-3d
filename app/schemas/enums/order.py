@@ -6,13 +6,13 @@ class OrderStatus(str, Enum):
     PROCESSING = "PROCESSING"
     MODEL_READY = "MODEL_READY"
     FAILED = "FAILED"
+    REVISION = "REVISION"
 
 
 class PhotoStatus(str, Enum):
     UPLOADING = "UPLOADING"
     SCANNING = "SCANNING"
     UPLOADED = "UPLOADED"
-    REJECTED = "REJECTED"
 
 class PhotoPosition(str, Enum):
     """Позиция фотографии автомобиля."""

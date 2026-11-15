@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password, verify_password, create_access_token
 from app.database.models.user import User
-from app.exceptions.auth import EmailAlreadyExistsError, UserNotFoundError, \
+from app.exceptions.auth import EmailAlreadyExistsError, PermissionDeniedError, UserNotFoundError, \
 InvalidCredentialsError, InactiveUserError
 from app.repositories.user import create_user, get_user_by_email
+from app.schemas.enums.user_role import UserRole
 
 
 async def register_user(
@@ -45,4 +46,19 @@ async def authenticate_user(
 async def login_user(session: AsyncSession, email: str, password: str) -> str:
     user = await authenticate_user(session, email, password)
     access_token = create_access_token(user.id, user.email)
+    return access_token
+
+async def login_admin(
+    session: AsyncSession,
+    email: str,
+    password: str
+) -> str:
+    """Получение токена авторизации админстратора с проверкой роли пользователя"""
+    user = await authenticate_user(session, email, password)
+
+    if user.role != UserRole.ADMIN:
+        raise PermissionDeniedError()
+
+    access_token = create_access_token(user.id, user.email)
+
     return access_token

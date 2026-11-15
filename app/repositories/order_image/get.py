@@ -21,10 +21,13 @@ async def get_order_photo_by_order_id_and_position(
     position: str
 ) -> OrderPhoto | None:
     result = await session.execute(
-        select(OrderPhoto).where(
-            OrderPhoto.order_id==order_id,
-            OrderPhoto.position==position
+        select(OrderPhoto)
+        .where(
+            OrderPhoto.order_id == order_id,
+            OrderPhoto.position == position
         )
+        .order_by(OrderPhoto.id)
+        .limit(1)
     )
 
     return result.scalar_one_or_none()

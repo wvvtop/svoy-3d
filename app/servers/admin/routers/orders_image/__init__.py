@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import read
+from . import read, update
 
 orders_image_router = APIRouter(
     tags=["Роутер для фотографий заказов"],
@@ -8,3 +8,4 @@ orders_image_router = APIRouter(
 
 
 orders_image_router.include_router(read.router)
+orders_image_router.include_router(update.router)

@@ -4,7 +4,7 @@ from app.database.models.order import Order
 from app.database.models.order_details import OrderDetails
 from app.database.models.user import User
 from app.schemas.enums.order import PhotoPosition
-from app.servers.user.repositories.order_details.order_details import create_order_details
+from app.servers.user.repositories.order_details.create import create_order_details
 from app.servers.user.services.order_image.upload import cleanup_uploaded_objects, upload_order_image
 from app.services.storage import StorageService
 from fastapi import UploadFile
