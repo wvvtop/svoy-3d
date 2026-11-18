@@ -17,7 +17,7 @@ const route = useRoute();
               class="orders__nav-link"
               :class="{ 'orders__nav-link--active': route.name === 'active-orders' }"
               text="Активные заказы"
-              />
+            />
             <ButtonLink
               :to="{ name: 'revision-orders' }"
               class="orders__nav-link"
@@ -34,7 +34,6 @@ const route = useRoute();
     </template>
   </PageLayout>
 </template>
-
 
 <style scoped>
 .orders__header {

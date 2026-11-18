@@ -10,20 +10,51 @@
         :key="img.id"
         class="order-gallery__item"
         :image="img"
+        :loading="store.isImagePending(orderId, img.position)"
+        @approve="handleApprove(img.position)"
+        @reject="(reason) => handleReject(img.position, reason)"
+        @pending="handlePending(img.position)"
       />
     </div>
   </section>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import OrderImage from './OrderImage.vue';
+import { useOrdersStore } from '../stores/orders.js';
 
-defineProps({
-  images: {
-    type: Array,
-    default: () => [],
-  },
+const props = defineProps({
+  orderId: { type: [String, Number], required: true },
 })
+
+const store = useOrdersStore()
+
+const images = computed(() => store.getOrder(props.orderId)?.images || [])
+
+async function handleApprove(position) {
+  try {
+    await store.approveImage(props.orderId, position)
+  } catch (e) {
+    console.error('Не удалось принять фото:', e)
+  }
+}
+
+async function handleReject(position, reason) {
+  try {
+    await store.rejectImage(props.orderId, position, reason)
+  } catch (e) {
+    console.error('Не удалось отклонить фото:', e)
+  }
+}
+
+async function handlePending(position) {
+  try {
+    await store.pendingImage(props.orderId, position)
+  } catch (e) {
+    console.error('Не удалось отправить фото на проверку:', e)
+  }
+}
 </script>
 
 <style scoped>

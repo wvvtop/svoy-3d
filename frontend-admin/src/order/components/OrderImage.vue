@@ -5,10 +5,12 @@
       :alt="`Фото ${image.position}`"
       loading="lazy"
       class="order-gallery__img"
+      :class="{ 'order-gallery__img--clickable': hasFullImage }"
+      @click="openViewer"
     />
-    <figcaption class="order-gallery__caption">
+    <div class="order-gallery__caption">
       {{ image.position }}
-    </figcaption>
+    </div>
     <span
       v-if="reviewBadge"
       class="image__badge"
@@ -16,21 +18,58 @@
     >
       {{ reviewBadge }}
     </span>
+    <ImageViewer
+      v-model="viewerOpen"
+      :src="viewerSrc"
+      :alt="`Фото ${image.position}`"
+      :loading="loading"
+      :status="image.review_status"
+      @approve="onApprove"
+      @reject="onReject"
+      @pending="onPending"
+    />
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue'
+import ImageViewer from './ImageViewer.vue';
 
 const props = defineProps({
-  image: {
-    type: Object,
-    required: true,
-  }
+  image: { type: Object, required: true },
+  loading: { type: Boolean, default: false },
 })
 
+const emit = defineEmits(['approve', 'reject', 'pending'])
+
+const viewerOpen = ref(false)
+const viewerSrc = ref('')
+
+const hasFullImage = computed(() =>
+  !!(props.image.compressed_url || props.image.preview_url)
+)
+
+const openViewer = () => {
+  if (!hasFullImage.value) return
+  viewerSrc.value = props.image.compressed_url || props.image.preview_url
+  viewerOpen.value = true
+}
+
+const onApprove = () => emit('approve')
+const onReject = (reason) => emit('reject', reason)
+const onPending = () => emit('pending')
+
+// Закрываем viewer, когда действие реально изменило статус
+// (т.е. store успешно обновил review_status после ответа API).
+watch(
+  () => props.image.review_status,
+  () => {
+    if (viewerOpen.value) viewerOpen.value = false
+  }
+)
+
 const REVIEW_LABELS = {
-  PENDING:  'На проверке',
+  PENDING: 'На проверке',
   APPROVED: 'Одобрено',
   REJECTED: 'Отклонено',
 }
@@ -74,6 +113,9 @@ const reviewBadge = computed(() => {
   background: var(--color-secondary);
 }
 
+.order-gallery__img--clickable {
+  cursor: zoom-in;
+}
 
 .image__badge--PENDING  { background: var(--color-warning); color: var(--color-on-warning); }
 .image__badge--APPROVED { background: var(--color-success); }

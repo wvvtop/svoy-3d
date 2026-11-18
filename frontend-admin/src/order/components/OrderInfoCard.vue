@@ -7,7 +7,6 @@
       :class="{ 'order-info--clickable': clickable }"
     >
       <div class="order-info__content">
-        <!-- Левая колонка: номер + статус в одной строке, под ними дата -->
         <div class="order-info__main">
           <div class="order-info__header">
             <span class="order-info__id">Заказ №{{ order.id }}</span>
@@ -24,7 +23,6 @@
           </p>
         </div>
 
-        <!-- Правая колонка: пожелания клиента -->
         <p v-if="order.requests" class="order-info__requests">
           {{ order.requests.requests }}
         </p>
@@ -65,7 +63,6 @@ const status = computed(() => getStatus(props.order.status));
   flex-direction: column;
   gap: 8px;
 
-  /* Сброс стилей ссылки */
   text-decoration: none;
   color: inherit;
 }
@@ -74,7 +71,6 @@ const status = computed(() => getStatus(props.order.status));
   cursor: pointer;
 }
 
-/* Две колонки: слева — номер/статус/дата, справа — текст requests */
 .order-info__content {
   display: flex;
   justify-content: flex-start;
@@ -89,7 +85,6 @@ const status = computed(() => getStatus(props.order.status));
   flex-shrink: 0;
 }
 
-/* Номер заказа и статус в одной строке, рядом */
 .order-info__header {
   display: flex;
   align-items: center;
@@ -115,10 +110,9 @@ const status = computed(() => getStatus(props.order.status));
   margin: 0;
 }
 
-/* Пожелания клиента справа */
 .order-info__requests {
   margin: 0;
-  flex: 1;                        /* занимает оставшееся место */
+  flex: 1;
   min-width: 0;
   color: var(--color-text);
   white-space: pre-wrap;

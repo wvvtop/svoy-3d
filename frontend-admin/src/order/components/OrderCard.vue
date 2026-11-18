@@ -5,7 +5,7 @@ import OrderPhotoGrid from './OrderPhotoGrid.vue';
 
 defineProps({
   order: { type: Object, required: true },
-  clickable: { type: Boolean, default: false}
+  clickable: { type: Boolean, default: false },
 });
 </script>
 
@@ -13,13 +13,13 @@ defineProps({
   <article class="order-card">
     <OrderInfoCard :order="order" :clickable="clickable">
       <template v-if="$slots.actions" #actions>
-        <slot name="actions" ></slot>
+        <slot name="actions"></slot>
       </template>
     </OrderInfoCard>
 
-    <SpacerComponent size="md"/>
+    <SpacerComponent size="md" />
 
-    <OrderPhotoGrid :images="order.images"/>
+    <OrderPhotoGrid :orderId="order.id" />
   </article>
 </template>
 

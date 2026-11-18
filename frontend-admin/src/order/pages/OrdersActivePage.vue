@@ -1,64 +1,32 @@
 <script setup>
 import ButtonComponent from '@/components/ButtonComponent.vue';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import OrderCard from '../components/OrderCard.vue';
-import { ordersApi } from '@/api/order.js';
+import { useOrdersStore } from '../stores/orders.js';
 
-const orders = ref([])
-const isLoading = ref(false)
-const error = ref(null)
 
-const processingIds = ref(new Set())
+const store = useOrdersStore()
+
+const orders = computed(() => store.activeOrders)
+const isLoading = computed(() => store.loadingActive)
+
+const actionError = ref(null)
+const error = computed(() => store.error || actionError.value)
+
+onMounted(() => {
+  store.loadActive().catch(() => {})
+})
 
 async function handleMoveToRevision(id) {
-  if (!confirm(`Отправить заказ на доработку№${id}?`)) return
-  if (processingIds.value.has(id)) return
-
-  processingIds.value.add(id)
+  if (!confirm(`Отправить заказ на доработку №${id}?`)) return
+  actionError.value = null
   try {
-    await ordersApi.sendToRevision(id)                              // ждём ответ
-    orders.value = orders.value.filter((o) => o.id !== id)  // убираем ТОЛЬКО после успеха
+    await store.sendToRevision(id)
   } catch (err) {
     console.error('Не удалось отправить заказ на доработку:', err)
-    error.value = err.response?.data?.detail || 'Не удалось отправить заказ на доработку:'
-  } finally {
-    processingIds.value.delete(id)
+    actionError.value = err.response?.data?.detail || 'Не удалось отправить заказ на доработку'
   }
 }
-
-onMounted(async () => {
-  isLoading.value = true
-  error.value = null
-  try {
-    // 1. Получаем список заказов
-    orders.value = await ordersApi.list()
-
-    // 2. Для каждого заказа догружаем фото
-    await Promise.all(
-      orders.value.map(async (order) => {
-        try {
-          order.images = await ordersApi.getImages(order.id)
-        } catch {
-          order.images = []
-        }
-      })
-    )
-    // 3. Для каждого заказа догружаем запросы от пользователя
-    await Promise.all(
-      orders.value.map(async (order) =>{
-        try {
-          order.requests = await ordersApi.getRequests(order.id)
-        } catch {
-          order.requests = ''
-        }
-      })
-    )
-  } catch (err) {
-    error.value = err.response?.data?.detail || 'Не удалось загрузить заказы'
-  } finally {
-    isLoading.value = false
-  }
-})
 </script>
 
 <template>
@@ -72,17 +40,19 @@ onMounted(async () => {
         v-for="order in orders"
         :key="order.id"
         :order="order"
-        clickable>
+        clickable
+      >
         <template #actions>
-          <ButtonComponent text="🛠️" variant="circle-delete"
-            @action="handleMoveToRevision(order.id)" />
-
+          <ButtonComponent
+            text="🛠️"
+            variant="circle-delete"
+            @action="handleMoveToRevision(order.id)"
+          />
         </template>
       </OrderCard>
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .orders__list {

@@ -85,10 +85,23 @@ const clickButton = () => {
   background-color: var(--color-success);
   line-height: 0.8;
   color: var(--color-on-success);
-  padding: 10px 10px;
   border-radius: 999px;
   padding: 15px 15px;
   cursor: pointer;
+}
+
+.button--circle-close {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  line-height: 0.8;
+  padding: 15px 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.button--circle-close:hover {
+  background-color: var(--color-surface-hover);
 }
 
 .button--circle-restore:hover {

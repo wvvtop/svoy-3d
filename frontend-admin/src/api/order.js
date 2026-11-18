@@ -4,7 +4,7 @@ export const ordersApi = {
   list: () => apiClient.get('/orders/').then((r) => r.data),
   getRevision: () => apiClient.get('/orders/revision').then((r) => r.data),
   get: (id) => apiClient.get(`/orders/${id}`).then((r) => r.data),
-  getImages: (id) => apiClient.get(`/orders/image/${id}`).then((r) => r.data),
+  getImages: (id) => apiClient.get(`/orders/${id}/image`).then((r) => r.data),
   getRequests: (id) => apiClient.get(`/orders/details/${id}`).then((r) => r.data),
   create: ({ front, left, back, requests = ''}) => {
     const formData = new FormData();
@@ -18,6 +18,26 @@ export const ordersApi = {
   },
   sendToRevision: (id) => apiClient.patch(`/orders/${id}/revision`).then((r) => r.data),
   revertFromRevision: (id) => apiClient.patch(`/orders/${id}/revision/revert`).then((r) => r.data),
+  markImagePending: (id, position) => {
+    return apiClient
+      .patch(`/orders/${id}/image/${position}/review`, { review_status: 'PENDING' })
+        .then((r) => r.data)
+  },
+  markImageApproved: (id, position) => {
+    return apiClient
+      .patch(`/orders/${id}/image/${position}/review`, {review_status: 'APPROVED'})
+        .then((r) => r.data)
+  },
+  markImageRejected: (id, position, review_error) => {
+    return apiClient
+      .patch(`/orders/${id}/image/${position}/review`,
+        {
+        review_status: 'REJECTED',
+        review_error
+        }
+      )
+        .then((r) => r.data)
+  },
 }
 
 export const chatApi = {
