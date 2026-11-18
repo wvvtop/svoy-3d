@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.patch(
-    "/{order_id}/photos/{position}/review",
+    "/{order_id}/image/{position}/review",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Изменить статус проверки изображения по позиции (admin)",
 )

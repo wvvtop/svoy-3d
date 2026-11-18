@@ -3,7 +3,7 @@ from . import read, update
 
 orders_image_router = APIRouter(
     tags=["Роутер для фотографий заказов"],
-    prefix="/orders/image"
+    prefix="/orders"
 )
 
 

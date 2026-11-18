@@ -9,7 +9,7 @@ from app.servers.admin.services.order_image.get import get_user_order_photos
 
 router = APIRouter()
 
-@router.get("/{order_id}", response_model=list[OrderImageUrl])
+@router.get("/{order_id}/image", response_model=list[OrderImageUrl])
 async def get_order_images(
     current_admin: CurrentAdmin,
     session: Annotated[AsyncSession, Depends(get_session)],
