@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order import Order
+from app.schemas.enums.order import OrderStatus
 
 
 async def get_order_by_order_id(
@@ -40,6 +41,32 @@ async def get_active_orders(
     """Метод для получения активных заказов пользователей (Order)"""
     orders = await session.execute(
         select(Order)
+            .where(Order.deleted_at.is_(None))
+    )
+
+    return list(orders.scalars().all())
+
+async def get_all_new_active_orders(
+    session: AsyncSession
+) -> list[Order]:
+    """Метод для получения активных, в статусе нового, заказов пользователей (Order), отправленных на доработку"""
+    orders = await session.execute(
+        select(Order)
+            .where(Order.deleted_at.is_(None),
+                   Order.status == OrderStatus.NEW)
+    )
+
+    return list(orders.scalars().all())
+    
+
+async def get_all_orders_on_revision(
+    session: AsyncSession,
+) -> list[Order]:
+    """Метод для получения активных заказов пользователей (Order), отправленных на доработку"""
+    orders = await session.execute(
+        select(Order)
+            .where(Order.deleted_at.is_(None),
+                   Order.status == OrderStatus.REVISION)
     )
 
     return list(orders.scalars().all())

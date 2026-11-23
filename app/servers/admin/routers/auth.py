@@ -5,25 +5,12 @@ from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.dependencies import get_session
 from app.schemas.user import UserResponse
-from app.services.auth import login_user, register_user
+from app.services.auth import login_admin, login_user, register_user
 
 router = APIRouter(
     tags=["Роутер для регистрации и авторизации"],
     prefix="/auth"
 )
-
-# @router.post(
-#     "/register",
-#     status_code=status.HTTP_201_CREATED,
-#     response_model=UserResponse
-# )
-# async def registration(
-#     data: RegisterRequest,
-#     session: Annotated[AsyncSession, Depends(get_session)]
-# ):
-#     user = await register_user(session, data.email, data.password)
-
-#     return user
 
 @router.post(
     "/login",
@@ -36,7 +23,7 @@ async def login(
         Depends(get_session),
     ],
 ):
-    access_token = await login_user(
+    access_token = await login_admin(
         session=session,
         email=data.email,
         password=data.password,

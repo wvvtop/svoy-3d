@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.models.order_photo import OrderPhoto
 
 
-async def get_order_photos(
+async def get_order_photos_by_order_id(
     session: AsyncSession,
     order_id: int,
 ) -> list[OrderPhoto]:
