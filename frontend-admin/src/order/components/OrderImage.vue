@@ -11,6 +11,13 @@
     <div class="order-gallery__caption">
       {{ image.position }}
     </div>
+    <OrderImageHoverActions
+      :loading="loading"
+      :status="image.review_status"
+      @approve="onApprove"
+      @pending="onPending"
+      @reject="onReject"
+    />
     <span
       v-if="reviewBadge"
       class="image__badge"
@@ -34,6 +41,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import ImageViewer from './ImageViewer.vue';
+import OrderImageHoverActions from './OrderImageHoverActions.vue';
 
 const props = defineProps({
   image: { type: Object, required: true },
@@ -115,6 +123,22 @@ const reviewBadge = computed(() => {
 
 .order-gallery__img--clickable {
   cursor: zoom-in;
+}
+
+.order_image {
+  position: relative;
+  display: block;
+
+  /* Управление видимостью hover-панели. Переменные каскадом уходят
+     в дочерний OrderImageHoverActions.vue. */
+  --hover-actions-opacity: 0;
+  --hover-actions-pointer-events: none;
+}
+
+.order_image:hover,
+.order_image:focus-within {
+  --hover-actions-opacity: 1;
+  --hover-actions-pointer-events: auto;
 }
 
 .image__badge--PENDING  { background: var(--color-warning); color: var(--color-on-warning); }

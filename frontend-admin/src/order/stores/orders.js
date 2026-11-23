@@ -1,193 +1,493 @@
-// src/stores/orders.js
+import { ordersApi } from '@/api/order'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref } from 'vue'
-import { ordersApi } from '@/api/order.js'
 
-// Агрегат по статусам фото
-const aggregateReviewStatus = (images = []) => {
-  if (!images.length) return 'PENDING'
-  if (images.every(i => i.review_status === 'APPROVED')) return 'APPROVED'
-  if (images.some(i => i.review_status === 'REJECTED')) return 'REJECTED'
-  return 'PENDING'
+
+// Статусы заказов
+const ORDER_STATUS = {
+  ACTIVE: 'NEW',
+  REVISION: 'REVISION',
 }
 
 export const useOrdersStore = defineStore('orders', () => {
-  // --- state ---
-  const ordersById = reactive({})        // id -> order (вместе с images и requests)
-  const activeIds = ref([])
-  const revisionIds = ref([])
+  // Единое хранилище заказов по ID
+  const orders = reactive({})
 
+  // Состояние загрузки списков
   const loadingActive = ref(false)
   const loadingRevision = ref(false)
+
   const loadedActive = ref(false)
   const loadedRevision = ref(false)
-  const error = ref(null)
 
-  // блокировки: "orderId:position" для картинок, orderId для заказов
-  const imageActionPending = reactive(new Set())
+  // ID заказов, для которых сейчас выполняются действия
   const orderActionPending = reactive(new Set())
 
-  // --- getters ---
+  // Ключи формата "orderId:position"
+  const imageActionPending = reactive(new Set())
+
+  // Храним Promise, чтобы не отправлять одинаковые запросы повторно
+  const requests = new Map()
+  const detailRequests = new Map()
+
+  // Версия нужна, чтобы старые запросы не меняли состояние после reset
+  let storeVersion = 0
+
+  // Все заказы, загруженные в store
+  const allOrders = computed(() => Object.values(orders))
+
+  // Списки формируются автоматически по статусу
   const activeOrders = computed(() =>
-    activeIds.value.map(id => ordersById[id]).filter(Boolean)
+    allOrders.value.filter(
+      (order) => order.status === ORDER_STATUS.ACTIVE
+    )
   )
+
   const revisionOrders = computed(() =>
-    revisionIds.value.map(id => ordersById[id]).filter(Boolean)
+    allOrders.value.filter(
+      (order) => order.status === ORDER_STATUS.REVISION
+    )
   )
 
-  const getOrder = (id) => ordersById[id]
-  const isImagePending = (orderId, position) =>
-    imageActionPending.has(`${orderId}:${position}`)
-  const isOrderPending = (orderId) => orderActionPending.has(orderId)
+  // Получить заказ из хранилища
+  function getOrder(id) {
+    return orders[id] ?? null
+  }
 
-  // --- загрузка ---
-  async function enrichOrder(order) {
-    if (order._enriched) return
-    const [images, requests] = await Promise.all([
-      ordersApi.getImages(order.id).catch(() => []),
-      ordersApi.getRequests(order.id).catch(() => ''),
+  // Добавить заказ или обновить существующий
+  function upsertOrder(data) {
+    if (!data?.id) {
+      throw new Error('У заказа отсутствует id')
+    }
+
+    const existing = orders[data.id]
+
+    if (existing) {
+      Object.assign(existing, data)
+      return existing
+    }
+
+    orders[data.id] = {
+      ...data,
+
+      // null означает, что данные ещё не загружались
+      images: data.images ?? null,
+      requests: data.requests ?? null,
+
+      _imagesLoaded: false,
+      _requestsLoaded: false,
+    }
+
+    return orders[data.id]
+  }
+
+  // Привести ответ списка к массиву
+  function normalizeListResponse(response) {
+    if (Array.isArray(response)) {
+      return response
+    }
+
+    if (Array.isArray(response?.results)) {
+      return response.results
+    }
+
+    if (Array.isArray(response?.orders)) {
+      return response.orders
+    }
+
+    return []
+  }
+
+  // Загрузить фотографии заказа
+  function loadImages(order) {
+    if (order._imagesLoaded) {
+      return Promise.resolve(order.images)
+    }
+
+    const key = `${order.id}:images`
+
+    if (detailRequests.has(key)) {
+      return detailRequests.get(key)
+    }
+
+    const version = storeVersion
+
+    const promise = ordersApi
+      .getImages(order.id)
+      .then((data) => {
+        if (version !== storeVersion) return
+
+        order.images = data
+        order._imagesLoaded = true
+
+        return data
+      })
+      .finally(() => {
+        detailRequests.delete(key)
+      })
+
+    detailRequests.set(key, promise)
+
+    return promise
+  }
+
+  // Загрузить дополнительные данные заказа
+  function loadRequests(order) {
+    if (order._requestsLoaded) {
+      return Promise.resolve(order.requests)
+    }
+
+    const key = `${order.id}:requests`
+
+    if (detailRequests.has(key)) {
+      return detailRequests.get(key)
+    }
+
+    const version = storeVersion
+
+    const promise = ordersApi
+      .getRequests(order.id)
+      .then((data) => {
+        if (version !== storeVersion) return
+
+        order.requests = data
+        order._requestsLoaded = true
+
+        return data
+      })
+      .finally(() => {
+        detailRequests.delete(key)
+      })
+
+    detailRequests.set(key, promise)
+
+    return promise
+  }
+
+  // Загрузить фотографии и дополнительные данные
+  function enrichOrder(order) {
+    return Promise.all([
+      loadImages(order),
+      loadRequests(order),
     ])
-    order.images = images
-    order.requests = requests
-    order._enriched = true
   }
 
-  async function loadActive(force = false) {
-    if (loadingActive.value) return
-    if (!force && loadedActive.value) return
-    loadingActive.value = true
-    error.value = null
+  // Загрузить список заказов определённого статуса
+  function loadOrdersByStatus(status, force = false) {
+    const isActive = status === ORDER_STATUS.ACTIVE
+
+    const loading = isActive
+      ? loadingActive
+      : loadingRevision
+
+    const loaded = isActive
+      ? loadedActive
+      : loadedRevision
+
+    const requestKey = `list:${status}`
+
+    if (requests.has(requestKey)) {
+      return requests.get(requestKey)
+    }
+
+    if (loaded.value && !force) {
+      return Promise.resolve(
+        isActive ? activeOrders.value : revisionOrders.value
+      )
+    }
+
+    const version = storeVersion
+
+    const apiRequest = isActive
+      ? ordersApi.getNewOrders
+      : ordersApi.getRevision
+
+    loading.value = true
+
+    const promise = apiRequest()
+      .then(async (response) => {
+        if (version !== storeVersion) return []
+
+        const items = normalizeListResponse(response)
+
+        // Сначала сохраняем основные данные заказов
+        const loadedOrders = items.map(upsertOrder)
+
+        loaded.value = true
+
+        // Затем загружаем дополнительные данные каждого заказа
+        // Ошибка фотографий одного заказа не ломает весь список
+        await Promise.allSettled(
+          loadedOrders.map((order) => enrichOrder(order))
+        )
+
+        if (version !== storeVersion) return []
+
+        return isActive
+          ? activeOrders.value
+          : revisionOrders.value
+      })
+      .finally(() => {
+        if (version === storeVersion) {
+          loading.value = false
+        }
+
+        requests.delete(requestKey)
+      })
+
+    requests.set(requestKey, promise)
+
+    return promise
+  }
+
+  // Загрузить активные заказы
+  function loadActive(force = false) {
+    return loadOrdersByStatus(ORDER_STATUS.ACTIVE, force)
+  }
+
+  // Загрузить заказы на доработке
+  function loadRevision(force = false) {
+    return loadOrdersByStatus(ORDER_STATUS.REVISION, force)
+  }
+
+  // Загрузить один заказ по ID
+  function loadOrder(id, force = false) {
+    if (!id) {
+      return Promise.reject(new Error('Не указан ID заказа'))
+    }
+
+    const key = `order:${id}`
+
+    if (requests.has(key)) {
+      return requests.get(key)
+    }
+
+    const existingOrder = getOrder(id)
+
+    // Если заказ уже есть в store, запрашиваем только недостающие данные
+    if (existingOrder && !force) {
+      return enrichOrder(existingOrder).then(() => existingOrder)
+    }
+
+    const version = storeVersion
+
+    const promise = ordersApi
+      .get(id)
+      .then(async (data) => {
+        if (version !== storeVersion) return null
+
+        const order = upsertOrder(data)
+
+        await enrichOrder(order)
+
+        if (version !== storeVersion) return null
+
+        return order
+      })
+      .finally(() => {
+        requests.delete(key)
+      })
+
+    requests.set(key, promise)
+
+    return promise
+  }
+
+  // Проверить, выполняется ли действие с заказом
+  function isOrderPending(id) {
+    return orderActionPending.has(String(id))
+  }
+
+  // Проверить, выполняется ли действие с фотографией
+  function isImagePending(orderId, position) {
+    return imageActionPending.has(`${orderId}:${position}`)
+  }
+
+  // Переместить заказ на доработку
+  async function sendToRevision(id) {
+    const order = getOrder(id)
+    const key = String(id)
+
+    if (!order || orderActionPending.has(key)) return
+
+    orderActionPending.add(key)
+
     try {
-      const list = await ordersApi.list()
-      await Promise.all(list.map(enrichOrder))
-      list.forEach(o => { ordersById[o.id] = o })
-      activeIds.value = list.map(o => o.id)
-      loadedActive.value = true
-    } catch (e) {
-      error.value = e.response?.data?.detail || 'Не удалось загрузить заказы'
-      throw e
+      const response = await ordersApi.sendToRevision(id)
+
+      // Обновляем данные только после успешного ответа сервера
+      if (response && typeof response === 'object') {
+        Object.assign(order, response)
+      }
+
+      order.status = ORDER_STATUS.REVISION
+
+      return order
     } finally {
-      loadingActive.value = false
+      orderActionPending.delete(key)
     }
   }
 
-  async function loadRevision(force = false) {
-    if (loadingRevision.value) return
-    if (!force && loadedRevision.value) return
-    loadingRevision.value = true
-    error.value = null
+  // Вернуть заказ из доработки
+  async function revertFromRevision(id) {
+    const order = getOrder(id)
+    const key = String(id)
+
+    if (!order || orderActionPending.has(key)) return
+
+    orderActionPending.add(key)
+
     try {
-      const list = await ordersApi.getRevision()
-      await Promise.all(list.map(enrichOrder))
-      list.forEach(o => { ordersById[o.id] = o })
-      revisionIds.value = list.map(o => o.id)
-      loadedRevision.value = true
-    } catch (e) {
-      error.value = e.response?.data?.detail || 'Не удалось загрузить заказы'
-      throw e
+      const response = await ordersApi.revertFromRevision(id)
+
+      if (response && typeof response === 'object') {
+        Object.assign(order, response)
+      }
+
+      order.status = ORDER_STATUS.ACTIVE
+
+      return order
     } finally {
-      loadingRevision.value = false
+      orderActionPending.delete(key)
     }
   }
 
-  // --- изменение статуса конкретного фото ---
-  async function changeImageReview(orderId, position, nextStatus, reason = null) {
-    const order = ordersById[orderId]
-    if (!order) return
-    const img = (order.images || []).find(i => i.position === position)
-    if (!img) return
-
+  // Изменить статус проверки фотографии
+  async function changeImageReview(
+    orderId,
+    position,
+    status,
+    reviewError = ''
+  ) {
+    const order = getOrder(orderId)
     const key = `${orderId}:${position}`
-    if (imageActionPending.has(key)) return
+
+    if (!order || imageActionPending.has(key)) return
+
+    const apiMethods = {
+      PENDING: () => ordersApi.markImagePending(orderId, position),
+
+      APPROVED: () => ordersApi.markImageApproved(orderId, position),
+
+      REJECTED: () =>
+        ordersApi.markImageRejected(
+          orderId,
+          position,
+          reviewError
+        ),
+    }
+
+    const apiMethod = apiMethods[status]
+
+    if (!apiMethod) {
+      throw new Error(`Неизвестный статус фотографии: ${status}`)
+    }
+
     imageActionPending.add(key)
 
-    const snapshot = {
-      review_status: img.review_status,
-      review_error: img.review_error,
-      order_status: order.order_status,
-      status: order.status,
-    }
-
     try {
-      if (nextStatus === 'APPROVED') {
-        await ordersApi.markImageApproved(orderId, position)
-      } else if (nextStatus === 'REJECTED') {
-        await ordersApi.markImageRejected(orderId, position, reason)
-      } else {
-        await ordersApi.markImagePending(orderId, position)
+      const response = await apiMethod()
+
+      // Обновляем фотографию после успешного ответа
+      const images = order.images
+
+      if (Array.isArray(images)) {
+        const image = images.find(
+          (item) => item.position === position
+        )
+
+        if (image) {
+          if (response && typeof response === 'object') {
+            Object.assign(image, response)
+          }
+
+          image.review_status = status
+          image.review_error =
+            status === 'REJECTED' ? reviewError : ''
+        }
       }
-      // Меняем только поля конкретного фото — статус заказа не трогаем.
-      img.review_status = nextStatus
-      img.review_error = reason
-    } catch (e) {
-      // rollback
-      img.review_status = snapshot.review_status
-      img.review_error = snapshot.review_error
-      order.order_status = snapshot.order_status
-      if ('status' in order) order.status = snapshot.status
-      throw e
+
+      return response
     } finally {
       imageActionPending.delete(key)
     }
   }
 
-  const approveImage = (orderId, position) =>
-    changeImageReview(orderId, position, 'APPROVED')
-  const rejectImage = (orderId, position, reason) =>
-    changeImageReview(orderId, position, 'REJECTED', reason)
-  const pendingImage = (orderId, position) =>
-    changeImageReview(orderId, position, 'PENDING')
-
-  // --- перемещение между списками ---
-  async function sendToRevision(orderId) {
-    if (orderActionPending.has(orderId)) return
-    orderActionPending.add(orderId)
-    try {
-      await ordersApi.sendToRevision(orderId)
-      activeIds.value = activeIds.value.filter(id => id !== orderId)
-      if (ordersById[orderId] && !revisionIds.value.includes(orderId)) {
-        revisionIds.value = [...revisionIds.value, orderId]
-      }
-    } finally {
-      orderActionPending.delete(orderId)
-    }
+  // Принять фотографию
+  function approveImage(orderId, position) {
+    return changeImageReview(orderId, position, 'APPROVED')
   }
 
-  async function revertFromRevision(orderId) {
-    if (orderActionPending.has(orderId)) return
-    orderActionPending.add(orderId)
-    try {
-      await ordersApi.revertFromRevision(orderId)
-      revisionIds.value = revisionIds.value.filter(id => id !== orderId)
-      if (ordersById[orderId] && !activeIds.value.includes(orderId)) {
-        activeIds.value = [...activeIds.value, orderId]
-      }
-    } finally {
-      orderActionPending.delete(orderId)
-    }
+  // Отклонить фотографию
+  function rejectImage(orderId, position, reason) {
+    return changeImageReview(orderId, position, 'REJECTED', reason)
   }
 
+  // Отправить фотографию на проверку
+  function pendingImage(orderId, position) {
+    return changeImageReview(orderId, position, 'PENDING')
+  }
+
+  // Полная очистка store
   function reset() {
-    Object.keys(ordersById).forEach(k => delete ordersById[k])
-    activeIds.value = []
-    revisionIds.value = []
+    storeVersion++
+
+    Object.keys(orders).forEach((id) => {
+      delete orders[id]
+    })
+
+    loadingActive.value = false
+    loadingRevision.value = false
+
     loadedActive.value = false
     loadedRevision.value = false
-    error.value = null
+
+    orderActionPending.clear()
+    imageActionPending.clear()
+
+    requests.clear()
+    detailRequests.clear()
   }
 
   return {
-    // state
-    ordersById, activeIds, revisionIds,
-    loadingActive, loadingRevision, error,
-    // getters
-    activeOrders, revisionOrders,
-    // helpers
-    getOrder, isImagePending, isOrderPending,
-    // actions
-    loadActive, loadRevision,
-    approveImage, rejectImage, pendingImage,
-    sendToRevision, revertFromRevision,
+    // Данные
+    orders,
+    allOrders,
+    activeOrders,
+    revisionOrders,
+
+    // Состояние загрузки
+    loadingActive,
+    loadingRevision,
+    loadedActive,
+    loadedRevision,
+
+    // Состояние действий
+    orderActionPending,
+    imageActionPending,
+
+    // Методы получения
+    getOrder,
+    isOrderPending,
+    isImagePending,
+
+    // Методы загрузки
+    loadActive,
+    loadRevision,
+    loadOrder,
+    enrichOrder,
+
+    // Действия с заказами
+    sendToRevision,
+    revertFromRevision,
+
+    // Действия с фотографиями
+    changeImageReview,
+    approveImage,
+    rejectImage,
+    pendingImage,
+
+    // Очистка
     reset,
   }
 })

@@ -57,6 +57,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { chatApi } from '@/api/orders'
 import { extractApiError } from '@/errors/error'
+import { useNotificationsStore } from '@/stores/chatNotifications';
 
 const props = defineProps({
   orderId:       { type: [Number, String], required: true },
@@ -74,6 +75,8 @@ const hasMore = ref(false)
 const nextBeforeId = ref(null)
 const scrollEl = ref(null)
 let pollTimer = null
+const notifications = useNotificationsStore()
+
 
 const canSend = computed(
   () => !sending.value && draft.value.trim().length > 0
@@ -151,7 +154,10 @@ async function pollNew() {
 }
 
 async function markReadSafe() {
-  try { await chatApi.markRead(props.orderId) } catch (err) {
+  try {
+    await chatApi.markRead(props.orderId)
+    notifications.clearOrderUnread(props.orderId)
+  } catch (err) {
     console.warn('[chat] markRead failed:', extractApiError(err))
   }
 }
