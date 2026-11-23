@@ -46,6 +46,19 @@ async def get_active_orders(
 
     return list(orders.scalars().all())
 
+async def get_all_new_active_orders(
+    session: AsyncSession
+) -> list[Order]:
+    """Метод для получения активных, в статусе нового, заказов пользователей (Order), отправленных на доработку"""
+    orders = await session.execute(
+        select(Order)
+            .where(Order.deleted_at.is_(None),
+                   Order.status == OrderStatus.NEW)
+    )
+
+    return list(orders.scalars().all())
+    
+
 async def get_all_orders_on_revision(
     session: AsyncSession,
 ) -> list[Order]:

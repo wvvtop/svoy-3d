@@ -5,10 +5,15 @@ from app.database.dependencies import get_session
 from app.database.models.user import User
 from app.schemas.order import AdminOrderResponse, OrderInfo
 from app.servers.admin.dependencies import CurrentAdmin
-from app.servers.admin.services.order.get import get_order, get_orders, get_orders_on_revision, get_user_orders
+from app.servers.admin.services.order.get import (
+    get_new_active_orders, 
+    get_order, get_orders, 
+    get_orders_on_revision, 
+    get_user_orders
+)
+
 
 router = APIRouter()
-
 
 
 @router.get("/users/{user_id}", response_model=list[AdminOrderResponse])
@@ -29,6 +34,15 @@ async def get_revision_orders(
 
     return await get_orders_on_revision(session=session)
 
+@router.get("/new", response_model=list[AdminOrderResponse])
+async def get_active_new_orders_info(
+    current_user: CurrentAdmin,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Endpoint для получения информации о всех заказах""" 
+
+    return await get_new_active_orders(session=session)
+
 @router.get("/{order_id}", response_model=AdminOrderResponse)
 async def get_order_info(
     current_user: CurrentAdmin,
@@ -37,7 +51,6 @@ async def get_order_info(
 ):
     """Endpoint для получения информации о конкретном заказе"""
     return await get_order(session=session, order_id=order_id)
-
 
 @router.get("/", response_model=list[AdminOrderResponse])
 async def get_orders_info(
