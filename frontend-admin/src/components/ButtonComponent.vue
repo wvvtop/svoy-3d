@@ -1,23 +1,46 @@
 <template>
-  <button class="button" :class="`button--${variant}`" @click="clickButton" :type="type">{{ text }}</button>
+  <button
+    class="button"
+    :class="[
+      `button--${variant}`,
+      `button--${size}`,
+    ]"
+    :type="type"
+    :disabled="disabled"
+    @click="clickButton"
+  >
+    <slot>{{ text }}</slot>
+  </button>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   text: String,
   type: {
     type: String,
-    default: 'button'
+    default: 'button',
   },
   variant: {
     type: String,
-    default: 'primary'
-  }
+    default: 'primary',
+  },
+  size: {
+    type: String,
+    default: 'md',
+    validator: (value) => ['sm', 'md', 'lg'].includes(value),
+  },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 })
-const emit = defineEmits(["action"])
+
+const emit = defineEmits(['action'])
 
 const clickButton = () => {
-  emit("action")
+  if (!props.disabled) {
+    emit('action')
+  }
 }
 </script>
 
@@ -119,5 +142,42 @@ const clickButton = () => {
 .button--primary {
   color: var(--color-on-primary);
   background-color: var(--color-primary);
+}
+
+.button {
+  font-family: inherit;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* Нейтральная кнопка */
+.button--secondary {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+.button--secondary:hover:not(:disabled) {
+  background-color: var(--color-surface-hover);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+/* Компактная кнопка */
+.button--sm {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+/* Большая кнопка */
+.button--lg {
+  padding: 12px 24px;
+  font-size: 18px;
+}
+
+/* Заблокированная кнопка */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 </style>

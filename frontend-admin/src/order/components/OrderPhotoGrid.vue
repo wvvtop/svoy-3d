@@ -21,8 +21,8 @@
 
 <script setup>
 import { computed } from 'vue'
-import OrderImage from './OrderImage.vue';
-import { useOrdersStore } from '../stores/orders.js';
+import OrderImage from './OrderImage.vue'
+import { useOrdersStore } from '../stores/orders.js'
 
 const props = defineProps({
   orderId: { type: [String, Number], required: true },
@@ -30,7 +30,7 @@ const props = defineProps({
 
 const store = useOrdersStore()
 
-const images = computed(() => store.getOrder(props.orderId)?.images || [])
+const images = computed(() => store.findOrder(props.orderId)?.images || [])
 
 async function handleApprove(position) {
   try {
