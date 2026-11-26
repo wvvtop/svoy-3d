@@ -19,6 +19,13 @@ class OrderNotFoundError(OrderError):
     message = "Order not found"
 
 
+class InvalidOrderCursorError(OrderError):
+    """Некорректный или устаревший курсор пагинации заказов."""
+
+    code = "invalid_order_cursor"
+    message = "Invalid pagination cursor"
+
+
 class OrderAccessDeniedError(OrderError):
     """Заказ принадлежит другому пользователю."""
 
