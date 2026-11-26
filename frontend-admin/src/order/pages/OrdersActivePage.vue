@@ -1,56 +1,44 @@
 <script setup>
-import ButtonComponent from '@/components/ButtonComponent.vue';
-import { computed, onMounted, ref } from 'vue';
-import OrderCard from '../components/OrderCard.vue';
-import { useOrdersStore } from '../stores/orders.js';
-
+import { computed, onMounted, ref } from 'vue'
+import OrdersPagination from '../components/OrdersPagination.vue'
+import OrderCard from '../components/OrderCard.vue'
+import OrderStatusAction from '../components/OrderStatusAction.vue'
+import { ORDER_STATUS, useOrdersStore } from '../stores/orders.js'
 
 const store = useOrdersStore()
 
-const orders = computed(() => store.activeOrders)
-const isLoading = computed(() => store.loadingActive)
+const orders = computed(() => store.items)
+const isLoading = computed(() => store.listLoading)
 
 const actionError = ref(null)
-const error = computed(() => store.error || actionError.value)
+const error = computed(() => store.listError)
 
 onMounted(() => {
   store.loadActive().catch(() => {})
 })
-
-async function handleMoveToRevision(id) {
-  if (!confirm(`Отправить заказ на доработку №${id}?`)) return
-  actionError.value = null
-  try {
-    await store.sendToRevision(id)
-  } catch (err) {
-    console.error('Не удалось отправить заказ на доработку:', err)
-    actionError.value = err.response?.data?.detail || 'Не удалось отправить заказ на доработку'
-  }
-}
 </script>
 
 <template>
   <div>
     <p v-if="isLoading">Загрузка…</p>
-    <p v-else-if="error" class="orders__error">{{ error }}</p>
-    <p v-else-if="!orders.length" class="orders__empty">Заказов пока нет</p>
+    <p v-if="actionError" class="orders__error">{{ actionError }}</p>
+    <p v-if="error" class="orders__error">{{ error }}</p>
+    <p v-else-if="!isLoading && !orders.length" class="orders__empty">Заказов пока нет</p>
 
-    <div v-else class="orders__list">
+    <div v-if="!isLoading && orders.length" class="orders__list">
       <OrderCard
         v-for="order in orders"
         :key="order.id"
         :order="order"
+        :class="{ 'orders__item--shifted': order.status !== ORDER_STATUS.ACTIVE }"
         clickable
       >
         <template #actions>
-          <ButtonComponent
-            text="🛠️"
-            variant="circle-delete"
-            @action="handleMoveToRevision(order.id)"
-          />
+          <OrderStatusAction :order="order" @error="actionError = $event" />
         </template>
       </OrderCard>
     </div>
+    <OrdersPagination />
   </div>
 </template>
 
@@ -58,6 +46,10 @@ async function handleMoveToRevision(id) {
 .orders__list {
   display: grid;
   gap: 12px;
+}
+
+.orders__item--shifted {
+  opacity: 0.7;
 }
 
 .orders__error {

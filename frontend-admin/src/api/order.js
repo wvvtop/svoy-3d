@@ -2,8 +2,8 @@ import apiClient from "./client";
 
 export const ordersApi = {
   list: () => apiClient.get('/orders/').then((r) => r.data),
-  getNewOrders: () => apiClient.get('/orders/new').then((r) => r.data),
-  getRevision: () => apiClient.get('/orders/revision').then((r) => r.data),
+  getNewOrders: (params = {}) => apiClient.get('/orders/new', { params }).then((r) => r.data),
+  getRevision: (params = {}) => apiClient.get('/orders/revision', { params }).then((r) => r.data),
   get: (id) => apiClient.get(`/orders/${id}`).then((r) => r.data),
   getImages: (id) => apiClient.get(`/orders/${id}/image`).then((r) => r.data),
   getRequests: (id) => apiClient.get(`/orders/details/${id}`).then((r) => r.data),

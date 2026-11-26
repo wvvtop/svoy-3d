@@ -26,7 +26,9 @@ const authStore = useAuthStore()
 const notifications = useNotificationsStore()
 
 onMounted(() => {
-  notifications.fetchUnread()
+  if(authStore.isAuthenticated) {
+    notifications.fetchUnread()
+  }
 })
 </script>
 

@@ -1,4 +1,5 @@
 <script setup>
+import OrdersToolbar from './components/OrdersToolbar.vue'
 import ButtonLink from '@/components/ButtonLink.vue';
 import PageLayout from '@/layouts/PageLayout.vue';
 import { useRoute } from 'vue-router';
@@ -26,6 +27,7 @@ const route = useRoute();
             />
           </nav>
         </header>
+        <OrdersToolbar />
       </div>
 
       <main class="orders__content">
